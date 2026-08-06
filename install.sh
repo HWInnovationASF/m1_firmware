@@ -1,109 +1,207 @@
 #!/usr/bin/env bash
-# ============================================================================
-# install.sh — ติดตั้ง MDBIoT firmware จาก repo m1_firmware (html.7z + python.7z)
-#   web    -> /var/www/html      (จาก html.7z : โฟลเดอร์ html/*)
-#   python -> /home/mdbcare      (จาก python.7z : โฟลเดอร์ python/)
-#   config/log เริ่มต้นว่าง (มากับ 7z)  ·  ตั้งสิทธิ์ 777
-#
-# ใช้:  sudo ./install.sh            (ถามยืนยัน — จะเขียนทับ config เดิม)
-#      sudo YES=1 ./install.sh       (ไม่ถาม)
-#      REPO=... WEB_DEST=... HOME_DEST=... sudo -E ./install.sh
-# ============================================================================
-set -euo pipefail
+# MDBIoT M1 firmware installer/updater
+# Installs html.7z and python.7z while preserving device configuration and logs.
+
+set -Eeuo pipefail
+IFS=$'\n\t'
+
 REPO="${REPO:-https://github.com/HWInnovationASF/m1_firmware.git}"
+SOURCE_DIR="${SOURCE_DIR:-}"
 WEB_DEST="${WEB_DEST:-/var/www/html}"
 HOME_DEST="${HOME_DEST:-/home/mdbcare}"
-WORK="$(mktemp -d)"
-trap 'rm -rf "$WORK"' EXIT
+RUN_USER="${RUN_USER:-$(basename "$HOME_DEST")}"
+WEB_GROUP="${WEB_GROUP:-www-data}"
+KEEP_BACKUPS="${KEEP_BACKUPS:-3}"
+YES="${YES:-0}"
+SKIP_SERVICE="${SKIP_SERVICE:-0}"
+BACKUP_ROOT="${BACKUP_ROOT:-/var/backups/mdbiot}"
 
-echo "==================================================="
-echo " MDBIoT firmware installer"
-echo "   repo   : $REPO"
-echo "   web    : $WEB_DEST   (จาก html.7z)"
-echo "   python : $HOME_DEST/python   (จาก python.7z)"
-echo "   * config/log จะถูกตั้งเป็นค่าเริ่มต้น (ว่าง)"
-echo "==================================================="
-if [ "${YES:-0}" != "1" ]; then
-  read -r -p "ดำเนินการติดตั้ง/เขียนทับ? (พิมพ์ yes): " a; [ "$a" = "yes" ] || { echo "ยกเลิก"; exit 1; }
+if [[ $EUID -ne 0 ]]; then
+  echo "กรุณารันด้วยสิทธิ์ root: sudo ./install.sh" >&2
+  exit 1
 fi
 
-# ---- dependencies ----
-command -v git >/dev/null 2>&1 || sudo apt-get install -y git
-command -v 7z  >/dev/null 2>&1 || sudo apt-get install -y p7zip-full
-command -v rsync >/dev/null 2>&1 || sudo apt-get install -y rsync
+if ! [[ "$KEEP_BACKUPS" =~ ^[0-9]+$ ]]; then
+  echo "KEEP_BACKUPS ต้องเป็นเลขจำนวนเต็มตั้งแต่ 0 ขึ้นไป" >&2
+  exit 1
+fi
 
-# ---- clone ----
-echo "==> git clone"
-git clone --depth 1 "$REPO" "$WORK/m1_firmware"
-cd "$WORK/m1_firmware"
+WORK="$(mktemp -d /tmp/mdbiot-install.XXXXXX)"
+cleanup() { rm -rf -- "$WORK"; }
+trap cleanup EXIT
+trap 'echo "ติดตั้งไม่สำเร็จที่บรรทัด $LINENO" >&2' ERR
 
-# ---- 2.2.1) html.7z -> /var/www/html (ไม่ทับ config เดิม) ----
-echo "==> แตก html.7z -> $WEB_DEST"
-7z x -y html.7z -o"$WORK/meow_temp" >/dev/null
-FW="$WORK/meow_temp/html"
-sudo mkdir -p "$WEB_DEST/meow/config" "$WEB_DEST/meow/data"
+echo "==================================================="
+echo " MDBIoT M1 firmware installer"
+echo " Web destination    : $WEB_DEST"
+echo " Python destination : $HOME_DEST/python"
+echo " Runtime user       : $RUN_USER"
+echo "==================================================="
 
-# (ก) sync โค้ด/assets — กันไฟล์ config ของเครื่องเดิมไว้ (ไม่แตะ)
-echo "==> อัปเดตโค้ด/assets (คง config เดิม)"
-sudo rsync -a \
-  --exclude='meow/config/' \
-  --exclude='meow/data/mcf_default.json' --exclude='meow/data/mcf_network.json' --exclude='meow/data/mcf.json' \
-  --exclude='meow/userauth.json' \
-  "$FW/" "$WEB_DEST/"
+if [[ "$YES" != "1" ]]; then
+  read -r -p "ดำเนินการติดตั้ง/อัปเดตหรือไม่? พิมพ์ yes: " answer
+  [[ "$answer" == "yes" ]] || { echo "ยกเลิก"; exit 0; }
+fi
 
-# (ข) seed config เฉพาะไฟล์ที่ยังไม่มี (เครื่องใหม่) — ของเดิมไม่แตะ
-seed(){ [ -f "$WEB_DEST/$1" ] || { [ -f "$FW/$1" ] && sudo cp "$FW/$1" "$WEB_DEST/$1"; }; }
-for f in meow/config/dvl.json meow/config/cml.json meow/config/detail_rgl.json \
-         meow/config/parameter_list.json meow/config/rgl.json \
-         meow/data/mcf_default.json meow/data/mcf_network.json meow/data/mcf.json; do
-  seed "$f"
+install_dependencies() {
+  local missing=()
+  command -v git >/dev/null 2>&1 || missing+=(git)
+  command -v 7z >/dev/null 2>&1 || missing+=(p7zip-full)
+  command -v rsync >/dev/null 2>&1 || missing+=(rsync)
+  command -v php >/dev/null 2>&1 || missing+=(php-cli)
+  command -v openssl >/dev/null 2>&1 || missing+=(openssl)
+  if ((${#missing[@]})); then
+    command -v apt-get >/dev/null 2>&1 || { echo "ไม่พบ apt-get สำหรับติดตั้ง: ${missing[*]}" >&2; exit 1; }
+    apt-get update
+    DEBIAN_FRONTEND=noninteractive apt-get install -y "${missing[@]}"
+  fi
+}
+
+install_dependencies
+
+if [[ -n "$SOURCE_DIR" ]]; then
+  SOURCE_DIR="$(readlink -f "$SOURCE_DIR")"
+  [[ -d "$SOURCE_DIR" ]] || { echo "ไม่พบ SOURCE_DIR: $SOURCE_DIR" >&2; exit 1; }
+  SOURCE="$SOURCE_DIR"
+else
+  echo "==> Download firmware"
+  git clone --depth 1 "$REPO" "$WORK/repository"
+  SOURCE="$WORK/repository"
+fi
+
+for archive in html.7z python.7z; do
+  [[ -f "$SOURCE/$archive" ]] || { echo "ไม่พบ $archive ใน $SOURCE" >&2; exit 1; }
+  7z t "$SOURCE/$archive" >/dev/null
 done
 
-# userauth: ไม่เก็บไฟล์ creds ใน repo — สร้าง default ที่เครื่องปลายทางเฉพาะเมื่อยังไม่มี
-# (เข้ารหัสแบบเดียวกับ check_login: cnee + bcrypt)  superadmin/admin, admin/admin
-if [ ! -f "$WEB_DEST/meow/userauth.json" ] && command -v php >/dev/null 2>&1; then
+echo "==> Extract packages"
+7z x -y "$SOURCE/html.7z" -o"$WORK/html" >/dev/null
+7z x -y "$SOURCE/python.7z" -o"$WORK/python" >/dev/null
+WEB_SOURCE="$WORK/html/html"
+PY_SOURCE="$WORK/python/python"
+[[ -d "$WEB_SOURCE/meow" ]] || { echo "html.7z ไม่มีโครงสร้าง html/meow" >&2; exit 1; }
+[[ -f "$PY_SOURCE/py_multi.py" ]] || { echo "python.7z ไม่มี python/py_multi.py" >&2; exit 1; }
+
+timestamp="$(date +%Y%m%d_%H%M%S)"
+backup_dir="$BACKUP_ROOT/$timestamp"
+mkdir -p "$backup_dir/web" "$backup_dir/python"
+
+echo "==> Backup current configuration: $backup_dir"
+[[ -d "$WEB_DEST/meow/config" ]] && cp -a "$WEB_DEST/meow/config" "$backup_dir/web/"
+[[ -d "$WEB_DEST/meow/data" ]] && cp -a "$WEB_DEST/meow/data" "$backup_dir/web/"
+[[ -f "$WEB_DEST/meow/userauth.json" ]] && cp -a "$WEB_DEST/meow/userauth.json" "$backup_dir/web/"
+for item in VPN dfl.json cma.json tou_schedule.json automation_last_commands.json; do
+  [[ -e "$HOME_DEST/python/$item" ]] && cp -a "$HOME_DEST/python/$item" "$backup_dir/python/"
+done
+
+mkdir -p "$WEB_DEST/meow/config" "$WEB_DEST/meow/data" "$HOME_DEST/python"
+
+echo "==> Update web application (preserve config/data/logs)"
+rsync -a \
+  --exclude='/meow/config/' \
+  --exclude='/meow/data/' \
+  --exclude='/meow/userauth.json' \
+  --exclude='/meow/log_device/' \
+  --exclude='/meow/log_err/' \
+  --exclude='/meow/dlog/' \
+  --exclude='/meow/textfile/' \
+  "$WEB_SOURCE/" "$WEB_DEST/"
+
+seed_web() {
+  local relative="$1"
+  if [[ ! -e "$WEB_DEST/$relative" && -e "$WEB_SOURCE/$relative" ]]; then
+    mkdir -p "$(dirname "$WEB_DEST/$relative")"
+    cp -a "$WEB_SOURCE/$relative" "$WEB_DEST/$relative"
+  fi
+}
+
+for file in \
+  meow/config/dvl.json meow/config/cml.json meow/config/detail_rgl.json \
+  meow/config/parameter_list.json meow/config/rgl.json \
+  meow/config/automation_control.json \
+  meow/data/mcf_default.json meow/data/mcf_network.json meow/data/mcf.json; do
+  seed_web "$file"
+done
+
+if [[ -f "$WEB_SOURCE/meow/config/rgl.json" && -f "$WEB_DEST/meow/config/rgl.json" ]]; then
+  echo "==> Merge register library"
   php -r '
-    $d=["superadmin"=>["password"=>password_hash("admin",PASSWORD_BCRYPT),"type"=>"superadmin"],
-        "admin"=>["password"=>password_hash("admin",PASSWORD_BCRYPT),"type"=>"admin"]];
-    echo base64_encode(openssl_encrypt(base64_encode(json_encode($d,JSON_UNESCAPED_SLASHES)),"AES-128-CBC","inno2024"));
-  ' 2>/dev/null | sudo tee "$WEB_DEST/meow/userauth.json" >/dev/null
-  echo "   สร้าง userauth default: superadmin/admin, admin/admin — โปรดเปลี่ยนรหัส!"
+    [$script,$existing,$firmware,$output]=$argv;
+    $current=json_decode(@file_get_contents($existing),true);
+    $incoming=json_decode(@file_get_contents($firmware),true);
+    if(!is_array($current)||!is_array($incoming)){fwrite(STDERR,"Invalid rgl.json\n");exit(1);}
+    foreach($incoming as $model=>$registers){
+      if(!isset($current[$model])){$current[$model]=$registers;continue;}
+      $count=function($value) use (&$count){
+        if(!is_array($value))return 0;
+        $total=0;foreach($value as $item)$total+=is_array($item)&&isset($item["name"])?1:$count($item);
+        return $total;
+      };
+      if($count($registers)>=$count($current[$model]))$current[$model]=$registers;
+    }
+    $json=json_encode($current,JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+    if($json===false||file_put_contents($output,$json)===false)exit(1);
+  ' "$WEB_DEST/meow/config/rgl.json" "$WEB_SOURCE/meow/config/rgl.json" "$WORK/rgl.json"
+  install -m 0664 "$WORK/rgl.json" "$WEB_DEST/meow/config/rgl.json"
 fi
 
-# (ค) rgl.json — merge: รุ่นใหม่เพิ่มเข้า, รุ่นที่มี register "เท่าหรือมากกว่า" อัปเดตทับ,
-#     รุ่นเดิมที่ไม่มีใน firmware เก็บไว้
-if [ -f "$FW/meow/config/rgl.json" ] && [ -f "$WEB_DEST/meow/config/rgl.json" ]; then
-  echo "==> merge rgl.json (library รุ่นมิเตอร์)"
-  php -r '
-    list($_,$ex,$fw)=$argv;
-    function rc($model,$m){ if(preg_match("/bac/",$model)&&is_array($m)&&$m){$m=array_values($m)[0];} return is_array($m)?count($m):0; }
-    $E=json_decode(@file_get_contents($ex),true)?:[]; $F=json_decode(@file_get_contents($fw),true)?:[];
-    $add=0;$upd=0;
-    foreach($F as $mo=>$rg){ if(!isset($E[$mo])){$E[$mo]=$rg;$add++;} elseif(rc($mo,$rg)>=rc($mo,$E[$mo])){$E[$mo]=$rg;$upd++;} }
-    file_put_contents("'"$WORK"'/rgl.merged.json", json_encode($E, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
-    fwrite(STDERR, "   +$add รุ่นใหม่, ~$upd รุ่นอัปเดต, คงเดิม ".(count($E)-$add)."\n");
-  ' "$WEB_DEST/meow/config/rgl.json" "$FW/meow/config/rgl.json"
-  sudo cp "$WORK/rgl.merged.json" "$WEB_DEST/meow/config/rgl.json"
+if [[ ! -f "$WEB_DEST/meow/userauth.json" ]]; then
+  initial_password="${INITIAL_ADMIN_PASSWORD:-$(openssl rand -hex 8)}"
+  INITIAL_ADMIN_PASSWORD="$initial_password" php -r '
+    $password=getenv("INITIAL_ADMIN_PASSWORD");
+    $users=[
+      "superadmin"=>["password"=>password_hash($password,PASSWORD_BCRYPT),"type"=>"superadmin"],
+      "admin"=>["password"=>password_hash($password,PASSWORD_BCRYPT),"type"=>"admin"]
+    ];
+    $encrypted=openssl_encrypt(base64_encode(json_encode($users,JSON_UNESCAPED_SLASHES)),"AES-128-CBC","inno2024");
+    echo base64_encode($encrypted);
+  ' > "$WEB_DEST/meow/userauth.json"
+  chmod 0660 "$WEB_DEST/meow/userauth.json"
+  echo "สร้างบัญชีเริ่มต้น superadmin/admin ด้วยรหัสผ่าน: $initial_password"
+  echo "โปรดเปลี่ยนรหัสผ่านหลังเข้าสู่ระบบครั้งแรก"
 fi
 
-# ---- 2.2.2) python.7z -> /home/mdbcare ----
-echo "==> แตก python.7z -> $HOME_DEST"
-7z x -y python.7z -o"$WORK/py_temp" >/dev/null
-sudo mkdir -p "$HOME_DEST"
-sudo rsync -a "$WORK/py_temp/python/" "$HOME_DEST/python/"
+echo "==> Update Python application (preserve runtime data/config)"
+rsync -a \
+  --exclude='/VPN/' \
+  --exclude='/dlog/' \
+  --exclude='/log_action/' \
+  --exclude='/log_err/' \
+  --exclude='/battery_control_logs/' \
+  --exclude='/dfl.json' \
+  --exclude='/cma.json' \
+  --exclude='/tou_schedule.json' \
+  --exclude='/automation_last_commands.json' \
+  --exclude='/mqtt_command_history.json' \
+  --exclude='/mqtt_command_history.json.lock' \
+  "$PY_SOURCE/" "$HOME_DEST/python/"
 
-# ---- โฟลเดอร์ log ว่าง + สิทธิ์ ----
-echo "==> โฟลเดอร์ log ว่าง + chmod 777"
-for d in log_device log_err dlog textfile; do sudo mkdir -p "$WEB_DEST/meow/$d"; done
-for d in log_action log_err dlog VPN; do sudo mkdir -p "$HOME_DEST/python/$d"; done
-sudo chmod -R 777 "$WEB_DEST"
-sudo chmod -R 777 "$HOME_DEST/python"
+for file in dfl.json cma.json tou_schedule.json; do
+  [[ -e "$HOME_DEST/python/$file" ]] || { [[ -e "$PY_SOURCE/$file" ]] && cp -a "$PY_SOURCE/$file" "$HOME_DEST/python/$file"; }
+done
 
-# ---- systemd: py_multi.service (ข้ามด้วย SKIP_SERVICE=1) ----
-RUN_USER="${RUN_USER:-$(basename "$HOME_DEST")}"
-if [ "${SKIP_SERVICE:-0}" != "1" ] && command -v systemctl >/dev/null 2>&1; then
-  echo "==> ตั้ง systemd: py_multi.service (user=$RUN_USER)"
-  sudo tee /etc/systemd/system/py_multi.service >/dev/null <<UNIT
+for directory in log_device log_err dlog textfile; do mkdir -p "$WEB_DEST/meow/$directory"; done
+for directory in log_action log_err dlog VPN battery_control_logs; do mkdir -p "$HOME_DEST/python/$directory"; done
+
+echo "==> Set ownership and safe writable permissions"
+chown -R "$RUN_USER:$WEB_GROUP" "$WEB_DEST/meow/config" "$WEB_DEST/meow/data" "$WEB_DEST/meow"/log_device "$WEB_DEST/meow"/log_err "$WEB_DEST/meow"/dlog "$WEB_DEST/meow"/textfile
+find "$WEB_DEST/meow/config" "$WEB_DEST/meow/data" "$WEB_DEST/meow"/log_device "$WEB_DEST/meow"/log_err "$WEB_DEST/meow"/dlog "$WEB_DEST/meow"/textfile -type d -exec chmod 2775 {} +
+find "$WEB_DEST/meow/config" "$WEB_DEST/meow/data" "$WEB_DEST/meow"/log_device "$WEB_DEST/meow"/log_err "$WEB_DEST/meow"/dlog "$WEB_DEST/meow"/textfile -type f -exec chmod 0664 {} +
+chown -R "$RUN_USER:$RUN_USER" "$HOME_DEST/python"
+find "$HOME_DEST/python" -type d -exec chmod 0755 {} +
+find "$HOME_DEST/python" -type f -exec chmod 0644 {} +
+find "$HOME_DEST/python" -type f -name '*.sh' -exec chmod 0755 {} +
+if [[ -d "$HOME_DEST/python/VPN" ]]; then
+  find "$HOME_DEST/python/VPN" -type d -exec chmod 0700 {} +
+  find "$HOME_DEST/python/VPN" -type f -exec chmod 0600 {} +
+fi
+
+php -l "$WEB_DEST/meow/index.php" >/dev/null
+python3 -m py_compile "$HOME_DEST/python/py_multi.py"
+
+if [[ "$SKIP_SERVICE" != "1" ]] && command -v systemctl >/dev/null 2>&1; then
+  echo "==> Configure py_multi.service"
+  cat > /etc/systemd/system/py_multi.service <<UNIT
 [Unit]
 Description=MDBIoT py_multi runner
 After=network-online.target
@@ -120,18 +218,30 @@ RestartSec=5
 [Install]
 WantedBy=multi-user.target
 UNIT
-  sudo systemctl daemon-reload
-  sudo systemctl enable py_multi.service
-  sudo systemctl restart py_multi.service || true
-  echo "   ตรวจ: sudo systemctl status py_multi.service"
+  systemctl daemon-reload
+  systemctl enable py_multi.service
+  systemctl restart py_multi.service
+  systemctl is-active --quiet py_multi.service || { systemctl status py_multi.service --no-pager; exit 1; }
 fi
 
-# เปิด apache (ถ้ามี)
-command -v systemctl >/dev/null 2>&1 && { sudo systemctl enable apache2 2>/dev/null || true; sudo systemctl restart apache2 2>/dev/null || true; }
+if command -v systemctl >/dev/null 2>&1 && systemctl list-unit-files apache2.service >/dev/null 2>&1; then
+  systemctl enable apache2.service >/dev/null 2>&1 || true
+  systemctl restart apache2.service
+fi
+
+if ((KEEP_BACKUPS == 0)); then
+  rm -rf -- "$backup_dir"
+else
+  mapfile -t old_backups < <(find "$BACKUP_ROOT" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort -r | tail -n +$((KEEP_BACKUPS + 1)))
+  for old in "${old_backups[@]}"; do
+    [[ "$old" =~ ^[0-9]{8}_[0-9]{6}$ ]] && rm -rf -- "$BACKUP_ROOT/$old"
+  done
+fi
 
 echo "==================================================="
-echo " ติดตั้งเสร็จ ✅"
-echo " ต่อไป: เปิด http://<ip>/ ล็อกอิน (superadmin/admin) → ตั้งค่า mcf_default (deviceSN/broker/ftp)"
-echo "        py_multi ทำงานผ่าน systemd แล้ว — ตรวจ: sudo systemctl status py_multi.service"
-echo " หมายเหตุ: VPN cert ไม่มากับ firmware — ติดตั้งแยก · เปลี่ยนรหัส default ด้วย"
+echo "ติดตั้ง MDBIoT firmware สำเร็จ"
+echo "Web       : $WEB_DEST/meow"
+echo "Python    : $HOME_DEST/python"
+echo "Backup    : $backup_dir"
+echo "ตรวจสอบ   : systemctl status py_multi.service"
 echo "==================================================="
