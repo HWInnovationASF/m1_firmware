@@ -15,6 +15,10 @@ KEEP_BACKUPS="${KEEP_BACKUPS:-3}"
 YES="${YES:-0}"
 SKIP_SERVICE="${SKIP_SERVICE:-0}"
 BACKUP_ROOT="${BACKUP_ROOT:-/var/backups/mdbiot}"
+DB_ROOT_PASSWORD="${DB_ROOT_PASSWORD:-Scada@2024}"
+DB_APP_USER="${DB_APP_USER:-meow}"
+DB_APP_PASSWORD="${DB_APP_PASSWORD:-Scada@2024}"
+ENABLE_MDBCARE_PASSWORDLESS_SUDO="${ENABLE_MDBCARE_PASSWORDLESS_SUDO:-1}"
 
 if [[ $EUID -ne 0 ]]; then
   echo "กรุณารันด้วยสิทธิ์ root: sudo ./install.sh" >&2
@@ -58,6 +62,95 @@ install_dependencies() {
 }
 
 install_dependencies
+
+install_platform() {
+  command -v apt-get >/dev/null 2>&1 || { echo "This installer requires Debian/Ubuntu with apt-get" >&2; exit 1; }
+  echo "==> Install Apache, PHP, MariaDB, OpenVPN and system dependencies"
+  apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    apache2 mariadb-server php php-cli php-mysql php-xml php-mbstring php-curl php-zip phpmyadmin \
+    openvpn network-manager python3 python3-pip python3-tk git p7zip-full rsync openssl sudo
+
+  phpenmod mysqli
+  systemctl enable --now mariadb.service
+  systemctl enable --now apache2.service
+
+  echo "==> Install Python libraries"
+  local pip_options=(--disable-pip-version-check)
+  if python3 -m pip help install 2>/dev/null | grep -q -- '--break-system-packages'; then
+    pip_options+=(--break-system-packages)
+  fi
+  python3 -m pip install "${pip_options[@]}" \
+    pyserial minimalmodbus pyModbusTCP numpy pycryptodome paho-mqtt psutil \
+    websocket-client rel filelock bacpypes paramiko
+}
+
+configure_database() {
+  [[ "$DB_ROOT_PASSWORD" =~ ^[A-Za-z0-9@._%+=:-]+$ ]] || { echo "DB_ROOT_PASSWORD contains unsupported characters" >&2; exit 1; }
+  [[ "$DB_APP_PASSWORD" =~ ^[A-Za-z0-9@._%+=:-]+$ ]] || { echo "DB_APP_PASSWORD contains unsupported characters" >&2; exit 1; }
+  [[ "$DB_APP_USER" =~ ^[A-Za-z0-9_-]+$ ]] || { echo "DB_APP_USER is invalid" >&2; exit 1; }
+
+  local mysql=(mariadb)
+  if ! "${mysql[@]}" --batch --skip-column-names -e 'SELECT 1' >/dev/null 2>&1; then
+    mysql=(mariadb -uroot "-p$DB_ROOT_PASSWORD")
+    "${mysql[@]}" --batch --skip-column-names -e 'SELECT 1' >/dev/null
+  fi
+
+  echo "==> Configure MariaDB database"
+  "${mysql[@]}" <<SQL
+CREATE DATABASE IF NOT EXISTS \`A-system\` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+CREATE TABLE IF NOT EXISTS \`A-system\`.\`send_log5\` (
+  \`id\` int(11) NOT NULL,
+  \`device_SN\` varchar(32) CHARACTER SET utf8 NOT NULL,
+  \`ts\` datetime NOT NULL,
+  \`Data\` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(\`Data\`)),
+  \`status\` int(11) NOT NULL DEFAULT 0
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
+CREATE USER IF NOT EXISTS '$DB_APP_USER'@'localhost' IDENTIFIED BY '$DB_APP_PASSWORD';
+CREATE USER IF NOT EXISTS '$DB_APP_USER'@'%' IDENTIFIED BY '$DB_APP_PASSWORD';
+ALTER USER '$DB_APP_USER'@'localhost' IDENTIFIED BY '$DB_APP_PASSWORD';
+ALTER USER '$DB_APP_USER'@'%' IDENTIFIED BY '$DB_APP_PASSWORD';
+GRANT ALL PRIVILEGES ON \`A-system\`.* TO '$DB_APP_USER'@'localhost';
+GRANT ALL PRIVILEGES ON \`A-system\`.* TO '$DB_APP_USER'@'%';
+FLUSH PRIVILEGES;
+ALTER USER 'root'@'localhost' IDENTIFIED BY '$DB_ROOT_PASSWORD';
+SQL
+}
+
+configure_apache() {
+  echo "==> Configure Apache web root"
+  mkdir -p "$WEB_DEST/meow"
+  rm -f -- "$WEB_DEST/index.html"
+  if [[ ! -e "$WEB_DEST/meow/phpmyadmin" ]]; then
+    ln -s /usr/share/phpmyadmin "$WEB_DEST/meow/phpmyadmin"
+  fi
+  sed -i -E 's|^[[:space:]]*DocumentRoot[[:space:]]+.*$|\tDocumentRoot /var/www/html/meow|' /etc/apache2/sites-available/000-default.conf
+  apache2ctl configtest
+}
+
+configure_sudoers() {
+  echo "==> Configure required sudo permissions"
+  local sudoers_file=/etc/sudoers.d/mdbiot
+  {
+    if [[ "$ENABLE_MDBCARE_PASSWORDLESS_SUDO" == "1" ]]; then
+      printf '%s ALL=(ALL) NOPASSWD: ALL\n' "$RUN_USER"
+    fi
+    printf '%s\n' \
+      'www-data ALL=(root) NOPASSWD: /usr/bin/nmcli' \
+      'www-data ALL=(root) NOPASSWD: /sbin/reboot'
+  } > "$sudoers_file"
+  chmod 0440 "$sudoers_file"
+  visudo -cf "$sudoers_file" >/dev/null
+}
+
+install_platform
+if ! id "$RUN_USER" >/dev/null 2>&1; then
+  echo "==> Create runtime user: $RUN_USER"
+  useradd --create-home --shell /bin/bash "$RUN_USER"
+fi
+configure_database
+configure_apache
+configure_sudoers
 
 if [[ -n "$SOURCE_DIR" ]]; then
   SOURCE_DIR="$(readlink -f "$SOURCE_DIR")"
