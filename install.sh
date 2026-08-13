@@ -68,7 +68,7 @@ install_platform() {
   echo "==> Install Apache, PHP, MariaDB, OpenVPN and system dependencies"
   apt-get update
   DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    apache2 mariadb-server php php-cli php-mysql php-xml php-mbstring php-curl php-zip phpmyadmin \
+    apache2 mariadb-server php php-cli php-mysql php-ftp php-xml php-mbstring php-curl php-zip phpmyadmin \
     openvpn network-manager python3 python3-pip python3-tk git p7zip-full rsync openssl sudo
 
   phpenmod mysqli
@@ -236,6 +236,12 @@ if [[ -f "$WEB_SOURCE/meow/config/rgl.json" && -f "$WEB_DEST/meow/config/rgl.jso
     if($json===false||file_put_contents($output,$json)===false)exit(1);
   ' "$WEB_DEST/meow/config/rgl.json" "$WEB_SOURCE/meow/config/rgl.json" "$WORK/rgl.json"
   install -m 0664 "$WORK/rgl.json" "$WEB_DEST/meow/config/rgl.json"
+fi
+
+if [[ ! -f "$WEB_DEST/meow/userauth.json" && -f "$WEB_SOURCE/meow/userauth.json" ]]; then
+  echo "==> Install bundled user authentication"
+  install -o www-data -g "$WEB_GROUP" -m 0660 \
+    "$WEB_SOURCE/meow/userauth.json" "$WEB_DEST/meow/userauth.json"
 fi
 
 if [[ ! -f "$WEB_DEST/meow/userauth.json" ]]; then
