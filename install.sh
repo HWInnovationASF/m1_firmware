@@ -211,7 +211,7 @@ seed_web() {
 for file in \
   meow/config/dvl.json meow/config/cml.json meow/config/detail_rgl.json \
   meow/config/parameter_list.json meow/config/rgl.json \
-  meow/config/automation_control.json \
+  meow/config/automation_control.json meow/config/command_list.json \
   meow/data/mcf_default.json meow/data/mcf_network.json meow/data/mcf.json; do
   seed_web "$file"
 done
