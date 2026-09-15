@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+COMMAND="${1:-help}"
+if (($#)); then shift; fi
+
+SELF_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+INSTALLER_DIR="${M1_INSTALLER_DIR:-/opt/mdbiot-installer}"
+if [[ -f "$SELF_DIR/install.sh" && -f "$SELF_DIR/html.7z" && -f "$SELF_DIR/python.7z" ]]; then
+  INSTALLER_DIR="$SELF_DIR"
+fi
+
+run_installer() {
+  [[ -f "$INSTALLER_DIR/install.sh" ]] || {
+    echo "ไม่พบตัวติดตั้งที่ $INSTALLER_DIR/install.sh" >&2
+    echo "กรุณาแตกไฟล์ชุดติดตั้ง แล้วเรียก sudo ./m1 install" >&2
+    exit 1
+  }
+  if [[ $EUID -eq 0 ]]; then
+    exec env SOURCE_DIR="$INSTALLER_DIR" bash "$INSTALLER_DIR/install.sh" "$@"
+  fi
+  exec sudo env SOURCE_DIR="$INSTALLER_DIR" bash "$INSTALLER_DIR/install.sh" "$@"
+}
+
+case "$COMMAND" in
+  install|update)
+    run_installer "$@"
+    ;;
+  status)
+    systemctl status py_multi.service --no-pager
+    ;;
+  restart)
+    if [[ $EUID -eq 0 ]]; then
+      systemctl restart py_multi.service
+    else
+      sudo systemctl restart py_multi.service
+    fi
+    systemctl is-active py_multi.service
+    ;;
+  logs)
+    journalctl -u py_multi.service -n "${1:-100}" --no-pager
+    ;;
+  version)
+    echo "MDBIoT M1 installer 20260915"
+    ;;
+  help|-h|--help)
+    cat <<'HELP'
+Usage: m1 <command>
+
+Commands:
+  install   ติดตั้งหรืออัปเดต MDBIoT M1
+  update    เหมือนกับ install
+  status    แสดงสถานะ py_multi.service
+  restart   เริ่ม py_multi.service ใหม่
+  logs [N]  แสดง Log ล่าสุด (ค่าเริ่มต้น 100 บรรทัด)
+  version   แสดงเวอร์ชันชุดติดตั้ง
+HELP
+    ;;
+  *)
+    echo "ไม่รู้จักคำสั่ง: $COMMAND" >&2
+    echo "ใช้: m1 help" >&2
+    exit 2
+    ;;
+esac
