@@ -1,4 +1,4 @@
-// copy to play
-git clone https://github.com/HWInnovationASF/m1_firmware.git
-cd m1_firmware
-sudo ./m1 install
+// copy to play <br>
+git clone https://github.com/HWInnovationASF/m1_firmware.git <br>
+cd m1_firmware <br>
+sudo ./m1 install <br>
