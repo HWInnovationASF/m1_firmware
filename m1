@@ -55,7 +55,13 @@ case "$COMMAND" in
     ;;
   update)
     update_repository
-    run_installer "$@"
+    if [[ $EUID -eq 0 ]]; then
+      install -m 0755 "$INSTALLER_DIR/m1" /usr/local/bin/m1
+    else
+      sudo install -m 0755 "$INSTALLER_DIR/m1" /usr/local/bin/m1
+    fi
+    echo "อัปเดตไฟล์ Firmware เรียบร้อยแล้ว"
+    echo "เมื่อต้องการติดตั้ง ให้เรียก: sudo m1 install"
     ;;
   status)
     systemctl status py_multi.service --no-pager
@@ -80,7 +86,7 @@ Usage: m1 <command>
 
 Commands:
   install   ติดตั้งหรืออัปเดต MDBIoT M1
-  update    ดึง Firmware ล่าสุดด้วย git pull --ff-only แล้วติดตั้ง
+  update    ดึงไฟล์ Firmware ล่าสุดด้วย git pull --ff-only (ยังไม่ติดตั้ง)
   status    แสดงสถานะ py_multi.service
   restart   เริ่ม py_multi.service ใหม่
   logs [N]  แสดง Log ล่าสุด (ค่าเริ่มต้น 100 บรรทัด)
