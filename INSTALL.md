@@ -7,7 +7,8 @@
 ```bash
 git clone https://github.com/HWInnovationASF/m1_firmware.git
 cd m1_firmware
-sudo ./m1 install
+sudo install -m 0755 ./m1 /usr/local/bin/m1
+m1 install
 ```
 
 ## ติดตั้งจากไฟล์ที่คัดลอกเข้าเครื่อง

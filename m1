@@ -6,7 +6,9 @@ if (($#)); then shift; fi
 
 SELF_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 INSTALLER_DIR="${M1_INSTALLER_DIR:-/opt/mdbiot-installer}"
-if [[ -f "$SELF_DIR/install.sh" && -f "$SELF_DIR/html.7z" && -f "$SELF_DIR/python.7z" ]]; then
+if [[ -f "$PWD/install.sh" && -f "$PWD/html.7z" && -f "$PWD/python.7z" ]]; then
+  INSTALLER_DIR="$PWD"
+elif [[ -f "$SELF_DIR/install.sh" && -f "$SELF_DIR/html.7z" && -f "$SELF_DIR/python.7z" ]]; then
   INSTALLER_DIR="$SELF_DIR"
 fi
 
