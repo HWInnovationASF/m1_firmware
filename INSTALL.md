@@ -34,6 +34,13 @@ sudo m1 restart
 m1 logs 100
 ```
 
+การอัปเดต Firmware จาก GitHub และติดตั้งในคำสั่งเดียว ให้เข้าโฟลเดอร์ Repository แล้วรัน:
+
+```bash
+cd ~/m1_firmware
+sudo m1 update
+```
+
 ระหว่างติดตั้งสามารถเลือกโหมด Automation ได้:
 
 - `ปิด` — อ่านมิเตอร์อย่างเดียว

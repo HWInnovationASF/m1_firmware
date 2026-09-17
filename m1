@@ -24,8 +24,26 @@ run_installer() {
   exec sudo env SOURCE_DIR="$INSTALLER_DIR" bash "$INSTALLER_DIR/install.sh" "$@"
 }
 
+update_repository() {
+  git -C "$INSTALLER_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1 || {
+    echo "ไม่พบ Git repository ที่ $INSTALLER_DIR" >&2
+    echo "กรุณา cd เข้าโฟลเดอร์ m1_firmware แล้วเรียก m1 update" >&2
+    exit 1
+  }
+  echo "==> Update firmware repository"
+  if [[ $EUID -eq 0 && -n "${SUDO_USER:-}" && "$SUDO_USER" != "root" ]]; then
+    sudo -u "$SUDO_USER" git -C "$INSTALLER_DIR" pull --ff-only
+  else
+    git -C "$INSTALLER_DIR" pull --ff-only
+  fi
+}
+
 case "$COMMAND" in
-  install|update)
+  install)
+    run_installer "$@"
+    ;;
+  update)
+    update_repository
     run_installer "$@"
     ;;
   status)
@@ -51,7 +69,7 @@ Usage: m1 <command>
 
 Commands:
   install   ติดตั้งหรืออัปเดต MDBIoT M1
-  update    เหมือนกับ install
+  update    ดึง Firmware ล่าสุดด้วย git pull --ff-only แล้วติดตั้ง
   status    แสดงสถานะ py_multi.service
   restart   เริ่ม py_multi.service ใหม่
   logs [N]  แสดง Log ล่าสุด (ค่าเริ่มต้น 100 บรรทัด)
