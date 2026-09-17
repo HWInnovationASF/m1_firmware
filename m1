@@ -10,6 +10,17 @@ if [[ -f "$PWD/install.sh" && -f "$PWD/html.7z" && -f "$PWD/python.7z" ]]; then
   INSTALLER_DIR="$PWD"
 elif [[ -f "$SELF_DIR/install.sh" && -f "$SELF_DIR/html.7z" && -f "$SELF_DIR/python.7z" ]]; then
   INSTALLER_DIR="$SELF_DIR"
+else
+  CALLING_USER="${SUDO_USER:-${USER:-}}"
+  CALLING_HOME=""
+  if [[ -n "$CALLING_USER" ]]; then
+    CALLING_HOME="$(getent passwd "$CALLING_USER" 2>/dev/null | cut -d: -f6 || true)"
+  fi
+  if [[ -n "$CALLING_HOME" && -f "$CALLING_HOME/m1_firmware/install.sh" \
+      && -f "$CALLING_HOME/m1_firmware/html.7z" \
+      && -f "$CALLING_HOME/m1_firmware/python.7z" ]]; then
+    INSTALLER_DIR="$CALLING_HOME/m1_firmware"
+  fi
 fi
 
 run_installer() {
