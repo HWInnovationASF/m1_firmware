@@ -1,0 +1,27 @@
+# Do not commit environment secrets.
+.vscode/
+.tmp_config_test/
+
+# Web runtime data, credentials and generated logs
+html/meow/config/*.json
+html/meow/config/*.php
+!html/meow/config/.gitkeep
+html/meow/data/
+html/meow/userauth.json
+html/meow/log_device/
+html/meow/log_err/
+html/meow/dlog/
+html/meow/textfile/
+
+# Python runtime state, credentials and logs
+python/VPN/
+python/__pycache__/
+python/*.json.lock
+python/mqtt_command_history.json
+python/automation_last_commands.json
+python/battery_last_good.json
+python/soc_last_good.json
+python/battery_control_logs/
+python/log_action/
+python/log_err/
+python/dlog/
