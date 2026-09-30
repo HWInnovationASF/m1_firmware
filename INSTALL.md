@@ -34,18 +34,14 @@ sudo m1 restart
 m1 logs 100
 ```
 
-การอัปเดตไฟล์ Firmware จาก GitHub โดยยังไม่ติดตั้ง ให้รัน:
+การอัปเดต Firmware จาก GitHub และติดตั้งทันที ให้รันจาก path ใดก็ได้:
 
 ```bash
-cd ~/m1_firmware
 sudo m1 update
 ```
 
-เมื่อต้องการนำไฟล์ล่าสุดไปติดตั้งจริง ให้รันแยกต่างหาก:
-
-```bash
-sudo m1 install
-```
+คำสั่งนี้จะ clone เวอร์ชันล่าสุดลง temporary directory จึงไม่ชนกับโฟลเดอร์
+`m1_firmware` ที่มีอยู่ และจะเก็บ Config, User, VPN และ Log เดิมไว้
 
 ระหว่างติดตั้งสามารถเลือกโหมด Automation ได้:
 
