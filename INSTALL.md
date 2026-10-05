@@ -1,5 +1,15 @@
 # MDBIoT M1 Installation
 
+## Build release archives on Windows
+
+Install 7-Zip and run:
+
+```powershell
+.\build-installer.ps1
+```
+
+Commit `html.7z`, `python.7z`, and `SHA256SUMS` together. Machine-specific web configuration, users, network data, VPN files, runtime logs, cache, and backup files are intentionally excluded from release archives.
+
 ชุดติดตั้งประกอบด้วย `install.sh`, `html.7z` และ `python.7z`
 
 ## ติดตั้งจาก Git

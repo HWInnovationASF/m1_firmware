@@ -212,6 +212,11 @@ for archive in html.7z python.7z; do
   7z t "$SOURCE/$archive" >/dev/null
 done
 
+if [[ -f "$SOURCE/SHA256SUMS" ]]; then
+  echo "==> Verify package checksums"
+  (cd "$SOURCE" && sha256sum -c SHA256SUMS)
+fi
+
 echo "==> Extract packages"
 7z x -y "$SOURCE/html.7z" -o"$WORK/html" >/dev/null
 7z x -y "$SOURCE/python.7z" -o"$WORK/python" >/dev/null
@@ -377,7 +382,7 @@ python3 -m py_compile "$HOME_DEST/python/py_multi.py"
 echo "==> Install m1 command"
 M1_INSTALLER_DEST="${M1_INSTALLER_DEST:-/opt/mdbiot-installer}"
 mkdir -p "$M1_INSTALLER_DEST"
-for installer_file in install.sh html.7z python.7z INSTALL.md m1; do
+for installer_file in install.sh html.7z python.7z SHA256SUMS INSTALL.md m1; do
   if [[ -f "$SCRIPT_DIR/$installer_file" ]]; then
     if [[ "$(readlink -f "$SCRIPT_DIR/$installer_file")" != "$(readlink -f "$M1_INSTALLER_DEST/$installer_file" 2>/dev/null || true)" ]]; then
       install -m 0644 "$SCRIPT_DIR/$installer_file" "$M1_INSTALLER_DEST/$installer_file"
