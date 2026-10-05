@@ -38,7 +38,8 @@ try {
         "$(Get-FileHash -LiteralPath $htmlArchive -Algorithm SHA256 | Select-Object -ExpandProperty Hash) *html.7z",
         "$(Get-FileHash -LiteralPath $pythonArchive -Algorithm SHA256 | Select-Object -ExpandProperty Hash) *python.7z"
     ) | ForEach-Object { $_.ToLowerInvariant() }
-    Set-Content -LiteralPath (Join-Path $projectRoot 'SHA256SUMS') -Value $checksums -Encoding ascii
+    $manifestPath = Join-Path $projectRoot 'SHA256SUMS'
+    [System.IO.File]::WriteAllText($manifestPath, (($checksums -join "`n") + "`n"), [System.Text.Encoding]::ASCII)
     Write-Host 'Installer package built successfully.' -ForegroundColor Green
     Get-Item $htmlArchive, $pythonArchive | Select-Object Name, Length, LastWriteTime
 }
