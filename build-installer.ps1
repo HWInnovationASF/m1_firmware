@@ -35,8 +35,8 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'python.7z integrity test failed' }
 
     $checksums = @(
-        "$(Get-FileHash -LiteralPath $htmlArchive -Algorithm SHA256 | Select-Object -ExpandProperty Hash)  html.7z",
-        "$(Get-FileHash -LiteralPath $pythonArchive -Algorithm SHA256 | Select-Object -ExpandProperty Hash)  python.7z"
+        "$(Get-FileHash -LiteralPath $htmlArchive -Algorithm SHA256 | Select-Object -ExpandProperty Hash) *html.7z",
+        "$(Get-FileHash -LiteralPath $pythonArchive -Algorithm SHA256 | Select-Object -ExpandProperty Hash) *python.7z"
     ) | ForEach-Object { $_.ToLowerInvariant() }
     Set-Content -LiteralPath (Join-Path $projectRoot 'SHA256SUMS') -Value $checksums -Encoding ascii
     Write-Host 'Installer package built successfully.' -ForegroundColor Green
