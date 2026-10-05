@@ -179,6 +179,7 @@ configure_sudoers() {
     fi
     printf '%s\n' \
       'www-data ALL=(root) NOPASSWD: /usr/bin/nmcli' \
+      'www-data ALL=(root) NOPASSWD: /usr/bin/systemctl restart py_multi.service' \
       'www-data ALL=(root) NOPASSWD: /sbin/reboot'
   } > "$sudoers_file"
   chmod 0440 "$sudoers_file"
