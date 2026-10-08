@@ -218,7 +218,8 @@ RestartSec=5
 WantedBy=multi-user.target
 UNIT
   systemctl daemon-reload
-  systemctl enable --now py_multi.service
+  systemctl enable py_multi.service
+  systemctl restart py_multi.service
 fi
 
 command -v php >/dev/null 2>&1 || echo "WARNING: PHP not found; web files deployed but PHP pages cannot run yet." >&2
