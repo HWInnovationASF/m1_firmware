@@ -1,5 +1,8 @@
 # MDBIoT M1 installation
 
+For a new empty machine, see the
+[Thai fresh-install guide](FRESH_INSTALL_TH.md).
+
 The installer is **deploy-first**. By default it deploys the web application and
 Python runtime without installing, stopping, enabling, or reconfiguring an
 existing Apache, nginx, AppServ, MySQL, or MariaDB installation.

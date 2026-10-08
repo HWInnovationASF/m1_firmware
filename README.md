@@ -24,3 +24,6 @@ cd m1_firmware
 
 See [INSTALL.md](INSTALL.md) for existing-server paths, non-interactive usage,
 optional dependencies, full-stack installation, and update instructions.
+
+สำหรับเครื่องใหม่ที่ยังไม่มี Web server, Database หรือ Python โปรดอ่าน
+[คู่มือติดตั้งเครื่องใหม่ภาษาไทย](FRESH_INSTALL_TH.md)
