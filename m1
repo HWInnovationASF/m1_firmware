@@ -3,7 +3,6 @@ set -Eeuo pipefail
 
 COMMAND="${1:-help}"
 if (($#)); then shift; fi
-REPO="${REPO:-https://github.com/HWInnovationASF/m1_firmware.git}"
 
 SELF_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 INSTALLER_DIR="${M1_INSTALLER_DIR:-/opt/mdbiot-installer}"
@@ -11,101 +10,38 @@ if [[ -f "$PWD/install.sh" && -f "$PWD/html.7z" && -f "$PWD/python.7z" ]]; then
   INSTALLER_DIR="$PWD"
 elif [[ -f "$SELF_DIR/install.sh" && -f "$SELF_DIR/html.7z" && -f "$SELF_DIR/python.7z" ]]; then
   INSTALLER_DIR="$SELF_DIR"
-else
-  CALLING_USER="${SUDO_USER:-${USER:-}}"
-  CALLING_HOME=""
-  if [[ -n "$CALLING_USER" ]]; then
-    CALLING_HOME="$(getent passwd "$CALLING_USER" 2>/dev/null | cut -d: -f6 || true)"
-  fi
-  if [[ -n "$CALLING_HOME" && -f "$CALLING_HOME/m1_firmware/install.sh" \
-      && -f "$CALLING_HOME/m1_firmware/html.7z" \
-      && -f "$CALLING_HOME/m1_firmware/python.7z" ]]; then
-    INSTALLER_DIR="$CALLING_HOME/m1_firmware"
-  fi
 fi
 
 run_installer() {
-  [[ -f "$INSTALLER_DIR/install.sh" ]] || {
-    echo "ไม่พบตัวติดตั้งที่ $INSTALLER_DIR/install.sh" >&2
-    echo "กรุณาแตกไฟล์ชุดติดตั้ง แล้วเรียก sudo ./m1 install" >&2
-    exit 1
-  }
-  if [[ $EUID -eq 0 ]]; then
-    exec env SOURCE_DIR="$INSTALLER_DIR" bash "$INSTALLER_DIR/install.sh" "$@"
-  fi
+  [[ -f "$INSTALLER_DIR/install.sh" ]] || { echo "install.sh not found in $INSTALLER_DIR" >&2; exit 1; }
+  if [[ $EUID -eq 0 ]]; then exec env SOURCE_DIR="$INSTALLER_DIR" bash "$INSTALLER_DIR/install.sh" "$@"; fi
   exec sudo env SOURCE_DIR="$INSTALLER_DIR" bash "$INSTALLER_DIR/install.sh" "$@"
 }
 
-update_from_github() {
-  if [[ $EUID -ne 0 ]]; then
-    exec sudo env REPO="$REPO" YES="${YES:-1}" AUTOMATION_MODE="${AUTOMATION_MODE:-preserve}" "$0" update "$@"
-  fi
-
-  command -v git >/dev/null 2>&1 || {
-    apt-get update
-    DEBIAN_FRONTEND=noninteractive apt-get install -y git
-  }
-
-  local update_work update_source
-  update_work="$(mktemp -d /tmp/mdbiot-update.XXXXXX)"
-  trap "rm -rf -- '$update_work'" EXIT
-  update_source="$update_work/m1_firmware"
-
-  echo "==> Download latest firmware from GitHub"
-  git clone --depth 1 --branch main "$REPO" "$update_source"
-  for required in install.sh m1 html.7z python.7z; do
-    [[ -f "$update_source/$required" ]] || {
-      echo "Repository ไม่มีไฟล์ $required" >&2
-      exit 1
-    }
-  done
-
-  echo "==> Install latest firmware (preserve configuration and runtime data)"
-  env SOURCE_DIR="$update_source" YES="${YES:-1}" AUTOMATION_MODE="${AUTOMATION_MODE:-preserve}" \
-    bash "$update_source/install.sh" "$@"
-  echo "อัปเดตและติดตั้ง Firmware ล่าสุดเรียบร้อยแล้ว"
+need_systemd() {
+  command -v systemctl >/dev/null 2>&1 || { echo "systemd is unavailable. Run Python manually or enable systemd in WSL." >&2; exit 1; }
 }
 
 case "$COMMAND" in
-  install)
-    run_installer "$@"
-    ;;
+  install) run_installer "$@" ;;
   update)
-    update_from_github "$@"
+    git -C "$INSTALLER_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo "Run this command from the cloned Git repository." >&2; exit 1; }
+    if [[ $EUID -eq 0 && -n "${SUDO_USER:-}" ]]; then sudo -u "$SUDO_USER" git -C "$INSTALLER_DIR" pull --ff-only; else git -C "$INSTALLER_DIR" pull --ff-only; fi
+    echo "Latest files downloaded. Apply them with: sudo m1 install"
     ;;
-  status)
-    systemctl status py_multi.service --no-pager
-    ;;
-  restart)
-    if [[ $EUID -eq 0 ]]; then
-      systemctl restart py_multi.service
-    else
-      sudo systemctl restart py_multi.service
-    fi
-    systemctl is-active py_multi.service
-    ;;
-  logs)
-    journalctl -u py_multi.service -n "${1:-100}" --no-pager
-    ;;
-  version)
-    echo "MDBIoT M1 installer 20260930"
-    ;;
+  status) need_systemd; systemctl status py_multi.service --no-pager ;;
+  restart) need_systemd; sudo systemctl restart py_multi.service; systemctl is-active py_multi.service ;;
+  logs) need_systemd; journalctl -u py_multi.service -n "${1:-100}" --no-pager ;;
+  version) echo "MDBIoT M1 installer 20261008" ;;
   help|-h|--help)
-    cat <<'HELP'
-Usage: m1 <command>
+    cat <<'EOF'
+Usage: m1 {install|update|status|restart|logs [N]|version}
 
-Commands:
-  install   ติดตั้งหรืออัปเดต MDBIoT M1
-  update    ดาวน์โหลด Firmware ล่าสุดจาก GitHub และติดตั้งทันที
-  status    แสดงสถานะ py_multi.service
-  restart   เริ่ม py_multi.service ใหม่
-  logs [N]  แสดง Log ล่าสุด (ค่าเริ่มต้น 100 บรรทัด)
-  version   แสดงเวอร์ชันชุดติดตั้ง
-HELP
+Examples:
+  sudo m1 install --deploy-only --web-dir /var/www/html --python-dir /opt/mdbiot/python
+  sudo m1 install --full --web-server nginx --database mariadb
+  m1 status
+EOF
     ;;
-  *)
-    echo "ไม่รู้จักคำสั่ง: $COMMAND" >&2
-    echo "ใช้: m1 help" >&2
-    exit 2
-    ;;
+  *) echo "Unknown command: $COMMAND" >&2; exit 2 ;;
 esac

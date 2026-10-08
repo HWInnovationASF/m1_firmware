@@ -1,445 +1,234 @@
 #!/usr/bin/env bash
-# MDBIoT M1 firmware installer/updater
-# Installs html.7z and python.7z while preserving device configuration and logs.
-
+# MDBIoT M1 deploy-first installer for Raspberry Pi OS, Debian, Ubuntu and WSL2.
 set -Eeuo pipefail
 IFS=$'\n\t'
 
 REPO="${REPO:-https://github.com/HWInnovationASF/m1_firmware.git}"
 SOURCE_DIR="${SOURCE_DIR:-}"
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 WEB_DEST="${WEB_DEST:-/var/www/html}"
-HOME_DEST="${HOME_DEST:-/home/mdbcare}"
-RUN_USER="${RUN_USER:-$(basename "$HOME_DEST")}"
+PYTHON_DEST="${PYTHON_DEST:-${HOME_DEST:+$HOME_DEST/python}}"
+PYTHON_DEST="${PYTHON_DEST:-/opt/mdbiot/python}"
+RUN_USER="${RUN_USER:-${SUDO_USER:-mdbcare}}"
 WEB_GROUP="${WEB_GROUP:-www-data}"
-KEEP_BACKUPS="${KEEP_BACKUPS:-3}"
+PROFILE="${PROFILE:-auto}"
+INSTALL_MODE="${INSTALL_MODE:-deploy-only}"
+INSTALL_MISSING="${INSTALL_MISSING:-ask}"
+INSTALL_PYTHON_DEPS="${INSTALL_PYTHON_DEPS:-ask}"
+CREATE_SERVICE="${CREATE_SERVICE:-ask}"
+WEB_SERVER="${WEB_SERVER:-existing}"
+DATABASE="${DATABASE:-existing}"
 YES="${YES:-0}"
-SKIP_SERVICE="${SKIP_SERVICE:-0}"
-BACKUP_ROOT="${BACKUP_ROOT:-/var/backups/mdbiot}"
-DB_ROOT_PASSWORD="${DB_ROOT_PASSWORD:-Scada@2024}"
-DB_APP_USER="${DB_APP_USER:-meow}"
-DB_APP_PASSWORD="${DB_APP_PASSWORD:-Scada@2024}"
-ENABLE_MDBCARE_PASSWORDLESS_SUDO="${ENABLE_MDBCARE_PASSWORDLESS_SUDO:-1}"
-AUTOMATION_MODE="${AUTOMATION_MODE:-}"
-HAD_AUTOMATION_CONFIG=0
-[[ -f "$WEB_DEST/meow/config/automation_control.json" ]] && HAD_AUTOMATION_CONFIG=1
-
-if [[ $EUID -ne 0 ]]; then
-  echo "กรุณารันด้วยสิทธิ์ root: sudo ./install.sh" >&2
-  exit 1
-fi
-
-if ! [[ "$KEEP_BACKUPS" =~ ^[0-9]+$ ]]; then
-  echo "KEEP_BACKUPS ต้องเป็นเลขจำนวนเต็มตั้งแต่ 0 ขึ้นไป" >&2
-  exit 1
-fi
-
+AUTOMATION_MODE="${AUTOMATION_MODE:-preserve}"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 WORK="$(mktemp -d /tmp/mdbiot-install.XXXXXX)"
-cleanup() { rm -rf -- "$WORK"; }
-trap cleanup EXIT
-trap 'echo "ติดตั้งไม่สำเร็จที่บรรทัด $LINENO" >&2' ERR
+trap 'rm -rf -- "$WORK"' EXIT
 
-echo "==================================================="
-echo " MDBIoT M1 firmware installer"
-echo " Web destination    : $WEB_DEST"
-echo " Python destination : $HOME_DEST/python"
-echo " Runtime user       : $RUN_USER"
-echo "==================================================="
+usage() {
+  cat <<'EOF'
+Usage: sudo ./install.sh [options]
 
-if [[ "$YES" != "1" ]]; then
-  read -r -p "ดำเนินการติดตั้ง/อัปเดตหรือไม่? พิมพ์ yes: " answer
-  [[ "$answer" == "yes" ]] || { echo "ยกเลิก"; exit 0; }
-fi
+Default mode deploys only the web files and Python application. It does not
+install, stop, enable or reconfigure an existing web server or database.
 
-select_automation_mode() {
-  local default_mode choice
-  default_mode="off"
-  [[ "$HAD_AUTOMATION_CONFIG" == "1" ]] && default_mode="preserve"
+  --deploy-only              Deploy application only (default)
+  --full                     Offer/install a complete server stack
+  --profile auto|raspi|linux|wsl
+  --web-dir PATH             Existing web document root (meow is placed inside)
+  --python-dir PATH          Python application destination
+  --run-user USER            User for files and optional Python service
+  --web-group GROUP          Web server group
+  --web-server existing|none|apache|nginx
+  --database existing|none|mariadb
+  --install-missing ask|yes|no
+  --python-deps ask|yes|no
+  --service ask|yes|no
+  --automation-mode off|simulation|live|preserve
+  --source-dir PATH          Directory containing html.7z and python.7z
+  -y, --yes                  Non-interactive; accept selected operations
+  -h, --help
+EOF
+}
 
-  if [[ -z "$AUTOMATION_MODE" && "$YES" != "1" ]]; then
-    echo ""
-    echo "เลือกโหมด Automation หลังติดตั้ง"
-    [[ "$HAD_AUTOMATION_CONFIG" == "1" ]] && echo "  0) ใช้ค่าปัจจุบันของเครื่องนี้ต่อไป (แนะนำสำหรับการอัปเดต)"
-    echo "  1) ปิด — อ่านมิเตอร์อย่างเดียว"
-    echo "  2) Simulation — คำนวณและเก็บ Log แต่ไม่เขียน Modbus"
-    echo "  3) Live — ทำงานจริงและเขียนคำสั่งไปยังอุปกรณ์"
-    read -r -p "เลือก [${default_mode}]: " choice
-    case "$choice" in
-      0|preserve) AUTOMATION_MODE="preserve" ;;
-      1|off) AUTOMATION_MODE="off" ;;
-      2|simulation|sim) AUTOMATION_MODE="simulation" ;;
-      3|live|real) AUTOMATION_MODE="live" ;;
-      '') AUTOMATION_MODE="$default_mode" ;;
-      *) echo "ตัวเลือก Automation ไม่ถูกต้อง" >&2; exit 1 ;;
-    esac
-  elif [[ -z "$AUTOMATION_MODE" ]]; then
-    AUTOMATION_MODE="$default_mode"
-  fi
-
-  case "$AUTOMATION_MODE" in
-    preserve|off|simulation|live) ;;
-    *) echo "AUTOMATION_MODE ต้องเป็น preserve, off, simulation หรือ live" >&2; exit 1 ;;
+while (($#)); do
+  case "$1" in
+    --deploy-only) INSTALL_MODE=deploy-only ;;
+    --full) INSTALL_MODE=full; INSTALL_MISSING=yes; CREATE_SERVICE=yes ;;
+    --profile) PROFILE="${2:?missing profile}"; shift ;;
+    --web-dir) WEB_DEST="${2:?missing web path}"; shift ;;
+    --python-dir) PYTHON_DEST="${2:?missing python path}"; shift ;;
+    --run-user) RUN_USER="${2:?missing user}"; shift ;;
+    --web-group) WEB_GROUP="${2:?missing group}"; shift ;;
+    --web-server) WEB_SERVER="${2:?missing web server}"; shift ;;
+    --database) DATABASE="${2:?missing database mode}"; shift ;;
+    --install-missing) INSTALL_MISSING="${2:?missing value}"; shift ;;
+    --python-deps) INSTALL_PYTHON_DEPS="${2:?missing value}"; shift ;;
+    --service) CREATE_SERVICE="${2:?missing value}"; shift ;;
+    --automation-mode) AUTOMATION_MODE="${2:?missing mode}"; shift ;;
+    --source-dir) SOURCE_DIR="${2:?missing source path}"; shift ;;
+    -y|--yes) YES=1 ;;
+    -h|--help) usage; exit 0 ;;
+    *) echo "Unknown option: $1" >&2; usage >&2; exit 2 ;;
   esac
-  if [[ "$AUTOMATION_MODE" == "preserve" && "$HAD_AUTOMATION_CONFIG" != "1" ]]; then
-    AUTOMATION_MODE="off"
+  shift
+done
+
+[[ $EUID -eq 0 ]] || { echo "Please run with sudo/root." >&2; exit 1; }
+case "$PROFILE" in auto|raspi|linux|wsl) ;; *) echo "Invalid profile: $PROFILE" >&2; exit 2;; esac
+case "$INSTALL_MODE" in deploy-only|full) ;; *) echo "Invalid install mode" >&2; exit 2;; esac
+case "$INSTALL_MISSING" in ask|yes|no) ;; *) echo "--install-missing must be ask, yes or no" >&2; exit 2;; esac
+case "$INSTALL_PYTHON_DEPS" in ask|yes|no) ;; *) echo "--python-deps must be ask, yes or no" >&2; exit 2;; esac
+case "$CREATE_SERVICE" in ask|yes|no) ;; *) echo "--service must be ask, yes or no" >&2; exit 2;; esac
+case "$WEB_SERVER" in existing|none|apache|nginx) ;; *) echo "Invalid web server mode" >&2; exit 2;; esac
+case "$DATABASE" in existing|none|mariadb) ;; *) echo "Invalid database mode" >&2; exit 2;; esac
+case "$AUTOMATION_MODE" in off|simulation|live|preserve) ;; *) echo "Invalid automation mode" >&2; exit 2;; esac
+
+is_wsl=0
+grep -qi microsoft /proc/version 2>/dev/null && is_wsl=1
+if [[ "$PROFILE" == auto ]]; then
+  if ((is_wsl)); then PROFILE=wsl
+  elif [[ -r /proc/device-tree/model ]] && grep -qi 'raspberry pi' /proc/device-tree/model; then PROFILE=raspi
+  else PROFILE=linux
   fi
-  echo "Automation mode     : $AUTOMATION_MODE"
-}
-
-select_automation_mode
-
-install_dependencies() {
-  local missing=()
-  command -v git >/dev/null 2>&1 || missing+=(git)
-  command -v 7z >/dev/null 2>&1 || missing+=(p7zip-full)
-  command -v rsync >/dev/null 2>&1 || missing+=(rsync)
-  command -v php >/dev/null 2>&1 || missing+=(php-cli)
-  command -v openssl >/dev/null 2>&1 || missing+=(openssl)
-  if ((${#missing[@]})); then
-    command -v apt-get >/dev/null 2>&1 || { echo "ไม่พบ apt-get สำหรับติดตั้ง: ${missing[*]}" >&2; exit 1; }
-    apt-get update
-    DEBIAN_FRONTEND=noninteractive apt-get install -y "${missing[@]}"
-  fi
-}
-
-install_dependencies
-
-install_platform() {
-  command -v apt-get >/dev/null 2>&1 || { echo "This installer requires Debian/Ubuntu with apt-get" >&2; exit 1; }
-  echo "==> Install Apache, PHP, MariaDB, OpenVPN and system dependencies"
-  apt-get update
-  DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    apache2 mariadb-server php php-cli php-mysql php-ftp php-xml php-mbstring php-curl php-zip phpmyadmin \
-    openvpn network-manager python3 python3-pip python3-tk python3-requests python3-rpi.gpio \
-    git p7zip-full rsync openssl sudo
-
-  phpenmod mysqli
-  systemctl enable --now mariadb.service
-  systemctl enable --now apache2.service
-
-  echo "==> Install Python libraries"
-  local pip_options=(--disable-pip-version-check)
-  if python3 -m pip help install 2>/dev/null | grep -q -- '--break-system-packages'; then
-    pip_options+=(--break-system-packages)
-  fi
-  python3 -m pip install "${pip_options[@]}" \
-    pyserial minimalmodbus pyModbusTCP numpy pycryptodome paho-mqtt psutil \
-    websocket-client rel filelock bacpypes paramiko requests
-}
-
-configure_database() {
-  [[ "$DB_ROOT_PASSWORD" =~ ^[A-Za-z0-9@._%+=:-]+$ ]] || { echo "DB_ROOT_PASSWORD contains unsupported characters" >&2; exit 1; }
-  [[ "$DB_APP_PASSWORD" =~ ^[A-Za-z0-9@._%+=:-]+$ ]] || { echo "DB_APP_PASSWORD contains unsupported characters" >&2; exit 1; }
-  [[ "$DB_APP_USER" =~ ^[A-Za-z0-9_-]+$ ]] || { echo "DB_APP_USER is invalid" >&2; exit 1; }
-
-  local mysql=(mariadb)
-  if ! "${mysql[@]}" --batch --skip-column-names -e 'SELECT 1' >/dev/null 2>&1; then
-    mysql=(mariadb -uroot "-p$DB_ROOT_PASSWORD")
-    "${mysql[@]}" --batch --skip-column-names -e 'SELECT 1' >/dev/null
-  fi
-
-  echo "==> Configure MariaDB database"
-  "${mysql[@]}" <<SQL
-CREATE DATABASE IF NOT EXISTS \`A-system\` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-CREATE TABLE IF NOT EXISTS \`A-system\`.\`send_log5\` (
-  \`id\` int(11) NOT NULL,
-  \`device_SN\` varchar(32) CHARACTER SET utf8 NOT NULL,
-  \`ts\` datetime NOT NULL,
-  \`Data\` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(\`Data\`)),
-  \`status\` int(11) NOT NULL DEFAULT 0
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
-CREATE USER IF NOT EXISTS '$DB_APP_USER'@'localhost' IDENTIFIED BY '$DB_APP_PASSWORD';
-CREATE USER IF NOT EXISTS '$DB_APP_USER'@'%' IDENTIFIED BY '$DB_APP_PASSWORD';
-ALTER USER '$DB_APP_USER'@'localhost' IDENTIFIED BY '$DB_APP_PASSWORD';
-ALTER USER '$DB_APP_USER'@'%' IDENTIFIED BY '$DB_APP_PASSWORD';
-GRANT ALL PRIVILEGES ON \`A-system\`.* TO '$DB_APP_USER'@'localhost';
-GRANT ALL PRIVILEGES ON \`A-system\`.* TO '$DB_APP_USER'@'%';
-FLUSH PRIVILEGES;
-ALTER USER 'root'@'localhost' IDENTIFIED BY '$DB_ROOT_PASSWORD';
-SQL
-}
-
-configure_apache() {
-  echo "==> Configure Apache web root"
-  mkdir -p "$WEB_DEST/meow"
-  rm -f -- "$WEB_DEST/index.html"
-  if [[ ! -e "$WEB_DEST/meow/phpmyadmin" ]]; then
-    ln -s /usr/share/phpmyadmin "$WEB_DEST/meow/phpmyadmin"
-  fi
-  sed -i -E 's|^[[:space:]]*DocumentRoot[[:space:]]+.*$|\tDocumentRoot /var/www/html/meow|' /etc/apache2/sites-available/000-default.conf
-  apache2ctl configtest
-}
-
-configure_sudoers() {
-  echo "==> Configure required sudo permissions"
-  local sudoers_file=/etc/sudoers.d/mdbiot
-  {
-    if [[ "$ENABLE_MDBCARE_PASSWORDLESS_SUDO" == "1" ]]; then
-      printf '%s ALL=(ALL) NOPASSWD: ALL\n' "$RUN_USER"
-    fi
-    printf '%s\n' \
-      'www-data ALL=(root) NOPASSWD: /usr/bin/nmcli' \
-      'www-data ALL=(root) NOPASSWD: /usr/bin/systemctl restart py_multi.service' \
-      'www-data ALL=(root) NOPASSWD: /sbin/reboot'
-  } > "$sudoers_file"
-  chmod 0440 "$sudoers_file"
-  visudo -cf "$sudoers_file" >/dev/null
-}
-
-install_platform
-if ! id "$RUN_USER" >/dev/null 2>&1; then
-  echo "==> Create runtime user: $RUN_USER"
-  useradd --create-home --shell /bin/bash "$RUN_USER"
 fi
-configure_database
-configure_apache
-configure_sudoers
 
-if [[ -n "$SOURCE_DIR" ]]; then
-  SOURCE_DIR="$(readlink -f "$SOURCE_DIR")"
-  [[ -d "$SOURCE_DIR" ]] || { echo "ไม่พบ SOURCE_DIR: $SOURCE_DIR" >&2; exit 1; }
-  SOURCE="$SOURCE_DIR"
-elif [[ -f "$SCRIPT_DIR/html.7z" && -f "$SCRIPT_DIR/python.7z" ]]; then
-  echo "==> Use installation packages beside install.sh"
-  SOURCE="$SCRIPT_DIR"
+ask_yes_no() {
+  local prompt="$1" default="${2:-no}" answer
+  if [[ "$YES" == 1 ]]; then [[ "$default" == yes ]]; return; fi
+  [[ -t 0 ]] || return 1
+  if [[ "$default" == yes ]]; then read -r -p "$prompt [Y/n]: " answer; [[ ! "$answer" =~ ^[Nn]$ ]]
+  else read -r -p "$prompt [y/N]: " answer; [[ "$answer" =~ ^[Yy]$ ]]
+  fi
+}
+
+install_choice() {
+  local prompt="$1"
+  case "$INSTALL_MISSING" in yes) return 0;; no) return 1;; esac
+  ask_yes_no "$prompt" no
+}
+
+if [[ "$YES" != 1 && -t 0 ]]; then
+  echo "Detected profile: $PROFILE"
+  read -r -p "Web document root [$WEB_DEST]: " answer; WEB_DEST="${answer:-$WEB_DEST}"
+  read -r -p "Python destination [$PYTHON_DEST]: " answer; PYTHON_DEST="${answer:-$PYTHON_DEST}"
+  read -r -p "Runtime user [$RUN_USER]: " answer; RUN_USER="${answer:-$RUN_USER}"
+fi
+
+echo "MDBIoT deployment plan"
+echo "  Mode       : $INSTALL_MODE"
+echo "  Profile    : $PROFILE"
+echo "  Web root   : $WEB_DEST"
+echo "  Python     : $PYTHON_DEST"
+echo "  Run user   : $RUN_USER"
+echo "  Web server : $WEB_SERVER (existing services are not modified)"
+echo "  Database   : $DATABASE (existing services are not modified)"
+if [[ "$YES" != 1 ]]; then ask_yes_no "Continue with this deployment?" no || exit 0; fi
+
+command -v apt-get >/dev/null 2>&1 || { echo "This installer currently requires an apt-based Debian/Ubuntu system." >&2; exit 1; }
+required_packages=()
+command -v 7z >/dev/null 2>&1 || required_packages+=(p7zip-full)
+command -v rsync >/dev/null 2>&1 || required_packages+=(rsync)
+command -v python3 >/dev/null 2>&1 || required_packages+=(python3 python3-venv)
+if command -v python3 >/dev/null 2>&1 && ! python3 -m venv --help >/dev/null 2>&1; then required_packages+=(python3-venv); fi
+
+if ((${#required_packages[@]})); then
+  if install_choice "Missing deployment tools (${required_packages[*]}). Install them?"; then
+    apt-get update
+    DEBIAN_FRONTEND=noninteractive apt-get install -y "${required_packages[@]}"
+  else
+    echo "Missing required deployment tools: ${required_packages[*]}" >&2
+    exit 1
+  fi
+fi
+
+if [[ "$INSTALL_MODE" == full ]]; then
+  optional_packages=(php-cli php-mbstring php-curl php-zip php-mysql)
+  [[ "$WEB_SERVER" == apache ]] && optional_packages+=(apache2)
+  [[ "$WEB_SERVER" == nginx ]] && optional_packages+=(nginx php-fpm)
+  [[ "$DATABASE" == mariadb ]] && optional_packages+=(mariadb-server)
+  [[ "$PROFILE" == raspi ]] && optional_packages+=(python3-rpi.gpio)
+  apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y "${optional_packages[@]}"
+fi
+
+if ! id "$RUN_USER" >/dev/null 2>&1; then
+  if install_choice "User '$RUN_USER' does not exist. Create it?"; then useradd --create-home --shell /bin/bash "$RUN_USER"
+  else echo "Runtime user does not exist: $RUN_USER" >&2; exit 1; fi
+fi
+getent group "$WEB_GROUP" >/dev/null 2>&1 || WEB_GROUP="$(id -gn "$RUN_USER")"
+
+if [[ -n "$SOURCE_DIR" ]]; then SOURCE="$SOURCE_DIR"
+elif [[ -f "$SCRIPT_DIR/html.7z" && -f "$SCRIPT_DIR/python.7z" ]]; then SOURCE="$SCRIPT_DIR"
 else
-  echo "==> Download firmware"
+  command -v git >/dev/null 2>&1 || { install_choice "Git is required to download the release. Install it?" && apt-get update && apt-get install -y git || exit 1; }
   git clone --depth 1 "$REPO" "$WORK/repository"
   SOURCE="$WORK/repository"
 fi
 
-for archive in html.7z python.7z; do
-  [[ -f "$SOURCE/$archive" ]] || { echo "ไม่พบ $archive ใน $SOURCE" >&2; exit 1; }
-  7z t "$SOURCE/$archive" >/dev/null
+for file in html.7z python.7z; do
+  [[ -f "$SOURCE/$file" ]] || { echo "Missing package: $SOURCE/$file" >&2; exit 1; }
+  7z t "$SOURCE/$file" >/dev/null
 done
-
-if [[ -f "$SOURCE/SHA256SUMS" ]]; then
-  echo "==> Verify package checksums"
-  (cd "$SOURCE" && sha256sum -c SHA256SUMS)
-fi
-
-echo "==> Extract packages"
+[[ ! -f "$SOURCE/SHA256SUMS" ]] || (cd "$SOURCE" && sha256sum -c SHA256SUMS)
 7z x -y "$SOURCE/html.7z" -o"$WORK/html" >/dev/null
 7z x -y "$SOURCE/python.7z" -o"$WORK/python" >/dev/null
-WEB_SOURCE="$WORK/html/html"
-PY_SOURCE="$WORK/python/python"
-[[ -d "$WEB_SOURCE/meow" ]] || { echo "html.7z ไม่มีโครงสร้าง html/meow" >&2; exit 1; }
-[[ -f "$PY_SOURCE/py_multi.py" ]] || { echo "python.7z ไม่มี python/py_multi.py" >&2; exit 1; }
+WEB_SOURCE="$WORK/html/html"; PY_SOURCE="$WORK/python/python"
+[[ -d "$WEB_SOURCE/meow" && -f "$PY_SOURCE/py_multi.py" ]] || { echo "Invalid package structure" >&2; exit 1; }
 
-timestamp="$(date +%Y%m%d_%H%M%S)"
-backup_dir="$BACKUP_ROOT/$timestamp"
-mkdir -p "$backup_dir/web" "$backup_dir/python"
+mkdir -p "$WEB_DEST" "$PYTHON_DEST"
+rsync -rlt --no-owner --no-group --no-perms --exclude='/meow/config/' --exclude='/meow/data/' --exclude='/meow/userauth.json' --exclude='/meow/log_device/' --exclude='/meow/log_err/' --exclude='/meow/dlog/' --exclude='/meow/textfile/' "$WEB_SOURCE/" "$WEB_DEST/"
+rsync -rlt --no-owner --no-group --no-perms --exclude='/VPN/' --exclude='/__pycache__/' --exclude='/log_action/' --exclude='/log_err/' --exclude='/dlog/' --exclude='/battery_control_logs/' --exclude='/*.json.lock' "$PY_SOURCE/" "$PYTHON_DEST/"
+mkdir -p "$WEB_DEST/meow"/{config,data,log_device,log_err,dlog,textfile} "$PYTHON_DEST"/{VPN,log_action,log_err,dlog,battery_control_logs}
+chown -R "$RUN_USER:$WEB_GROUP" "$WEB_DEST/meow" "$PYTHON_DEST"
+find "$WEB_DEST/meow" "$PYTHON_DEST" -type d -exec chmod 0755 {} +
 
-echo "==> Backup current configuration: $backup_dir"
-[[ -d "$WEB_DEST/meow/config" ]] && cp -a "$WEB_DEST/meow/config" "$backup_dir/web/"
-[[ -d "$WEB_DEST/meow/data" ]] && cp -a "$WEB_DEST/meow/data" "$backup_dir/web/"
-[[ -f "$WEB_DEST/meow/userauth.json" ]] && cp -a "$WEB_DEST/meow/userauth.json" "$backup_dir/web/"
-for item in VPN dfl.json cma.json tou_schedule.json automation_last_commands.json; do
-  [[ -e "$HOME_DEST/python/$item" ]] && cp -a "$HOME_DEST/python/$item" "$backup_dir/python/"
-done
-
-mkdir -p "$WEB_DEST/meow/config" "$WEB_DEST/meow/data" "$HOME_DEST/python"
-
-echo "==> Update web application (preserve config/data/logs)"
-rsync -a \
-  --exclude='/meow/config/' \
-  --exclude='/meow/data/' \
-  --exclude='/meow/userauth.json' \
-  --exclude='/meow/log_device/' \
-  --exclude='/meow/log_err/' \
-  --exclude='/meow/dlog/' \
-  --exclude='/meow/textfile/' \
-  "$WEB_SOURCE/" "$WEB_DEST/"
-
-seed_web() {
-  local relative="$1"
-  if [[ ! -e "$WEB_DEST/$relative" && -e "$WEB_SOURCE/$relative" ]]; then
-    mkdir -p "$(dirname "$WEB_DEST/$relative")"
-    cp -a "$WEB_SOURCE/$relative" "$WEB_DEST/$relative"
-  fi
-}
-
-for file in \
-  meow/config/dvl.json meow/config/cml.json meow/config/detail_rgl.json \
-  meow/config/parameter_list.json meow/config/rgl.json \
-  meow/config/automation_control.json meow/config/command_list.json \
-  meow/config/mainconfig.json meow/config/network.php meow/config/rgl_demo.json \
-  meow/data/mcf_default.json meow/data/mcf_network.json meow/data/mcf.json; do
-  seed_web "$file"
-done
-
-# Apply only the explicitly selected mode. "preserve" leaves an existing
-# machine untouched. A fresh/non-interactive installation defaults to "off".
-if [[ "$AUTOMATION_MODE" != "preserve" && -f "$WEB_DEST/meow/config/automation_control.json" ]]; then
-  echo "==> Set Automation mode: $AUTOMATION_MODE"
-  AUTOMATION_MODE="$AUTOMATION_MODE" php -r '
-    $mode=getenv("AUTOMATION_MODE");
-    $path=$argv[1];
-    $config=json_decode(@file_get_contents($path),true);
-    if(!is_array($config)){fwrite(STDERR,"Invalid automation_control.json\n");exit(1);}
-    if($mode==="off"){
-      $config["enabled"]=false;
-      $config["simulation_log_enabled"]=false;
-    }elseif($mode==="simulation"){
-      $config["enabled"]=true;
-      $config["simulation_log_enabled"]=true;
-    }elseif($mode==="live"){
-      $config["enabled"]=true;
-      $config["simulation_log_enabled"]=false;
-    }else{
-      fwrite(STDERR,"Invalid Automation mode\n");exit(1);
-    }
-    $json=json_encode($config,JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
-    if($json===false||file_put_contents($path,$json."\n")===false)exit(1);
-  ' "$WEB_DEST/meow/config/automation_control.json"
+install_python_deps=0
+case "$INSTALL_PYTHON_DEPS" in yes) install_python_deps=1;; no) ;; ask) ask_yes_no "Create a Python virtual environment and install dependencies?" yes && install_python_deps=1;; esac
+if ((install_python_deps)); then
+  python3 -m venv --system-site-packages "$PYTHON_DEST/.venv"
+  "$PYTHON_DEST/.venv/bin/python" -m pip install --upgrade pip
+  [[ ! -f "$PYTHON_DEST/requirements.txt" ]] || "$PYTHON_DEST/.venv/bin/python" -m pip install -r "$PYTHON_DEST/requirements.txt"
+  chown -R "$RUN_USER:$WEB_GROUP" "$PYTHON_DEST/.venv"
 fi
 
-if [[ "$AUTOMATION_MODE" == "preserve" ]]; then
-  echo "==> Preserve current Automation mode"
+if [[ "$AUTOMATION_MODE" != preserve && -f "$WEB_DEST/meow/config/automation_control.json" ]] && command -v php >/dev/null 2>&1; then
+  AUTOMATION_MODE="$AUTOMATION_MODE" php -r '$p=$argv[1];$c=json_decode(@file_get_contents($p),true);if(!is_array($c))exit(0);$m=getenv("AUTOMATION_MODE");$c["enabled"]=$m!=="off";$c["simulation_log_enabled"]=$m==="simulation";file_put_contents($p,json_encode($c,JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE)."\n");' "$WEB_DEST/meow/config/automation_control.json"
 fi
 
-if [[ -f "$WEB_SOURCE/meow/config/rgl.json" && -f "$WEB_DEST/meow/config/rgl.json" ]]; then
-  echo "==> Merge register library"
-  php -r '
-    [$script,$existing,$firmware,$output]=$argv;
-    $current=json_decode(@file_get_contents($existing),true);
-    $incoming=json_decode(@file_get_contents($firmware),true);
-    if(!is_array($current)||!is_array($incoming)){fwrite(STDERR,"Invalid rgl.json\n");exit(1);}
-    foreach($incoming as $model=>$registers){
-      if(!isset($current[$model])){$current[$model]=$registers;continue;}
-      $count=function($value) use (&$count){
-        if(!is_array($value))return 0;
-        $total=0;foreach($value as $item)$total+=is_array($item)&&isset($item["name"])?1:$count($item);
-        return $total;
-      };
-      if($count($registers)>=$count($current[$model]))$current[$model]=$registers;
-    }
-    $json=json_encode($current,JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
-    if($json===false||file_put_contents($output,$json)===false)exit(1);
-  ' "$WEB_DEST/meow/config/rgl.json" "$WEB_SOURCE/meow/config/rgl.json" "$WORK/rgl.json"
-  install -m 0664 "$WORK/rgl.json" "$WEB_DEST/meow/config/rgl.json"
-fi
-
-if [[ ! -f "$WEB_DEST/meow/userauth.json" && -f "$WEB_SOURCE/meow/userauth.json" ]]; then
-  echo "==> Install bundled user authentication"
-  install -o www-data -g "$WEB_GROUP" -m 0660 \
-    "$WEB_SOURCE/meow/userauth.json" "$WEB_DEST/meow/userauth.json"
-fi
-
-if [[ ! -f "$WEB_DEST/meow/userauth.json" ]]; then
-  initial_password="${INITIAL_ADMIN_PASSWORD:-$(openssl rand -hex 8)}"
-  INITIAL_ADMIN_PASSWORD="$initial_password" php -r '
-    $password=getenv("INITIAL_ADMIN_PASSWORD");
-    $users=[
-      "superadmin"=>["password"=>password_hash($password,PASSWORD_BCRYPT),"type"=>"superadmin"],
-      "admin"=>["password"=>password_hash($password,PASSWORD_BCRYPT),"type"=>"admin"]
-    ];
-    $encrypted=openssl_encrypt(base64_encode(json_encode($users,JSON_UNESCAPED_SLASHES)),"AES-128-CBC","inno2024");
-    echo base64_encode($encrypted);
-  ' > "$WEB_DEST/meow/userauth.json"
-  chmod 0660 "$WEB_DEST/meow/userauth.json"
-  echo "สร้างบัญชีเริ่มต้น superadmin/admin ด้วยรหัสผ่าน: $initial_password"
-  echo "โปรดเปลี่ยนรหัสผ่านหลังเข้าสู่ระบบครั้งแรก"
-fi
-
-echo "==> Update Python application (preserve runtime data/config)"
-rsync -a \
-  --exclude='/VPN/' \
-  --exclude='/dlog/' \
-  --exclude='/log_action/' \
-  --exclude='/log_err/' \
-  --exclude='/battery_control_logs/' \
-  --exclude='/dfl.json' \
-  --exclude='/cma.json' \
-  --exclude='/tou_schedule.json' \
-  --exclude='/automation_last_commands.json' \
-  --exclude='/mqtt_command_history.json' \
-  --exclude='/mqtt_command_history.json.lock' \
-  "$PY_SOURCE/" "$HOME_DEST/python/"
-
-for file in dfl.json cma.json tou_schedule.json; do
-  [[ -e "$HOME_DEST/python/$file" ]] || { [[ -e "$PY_SOURCE/$file" ]] && cp -a "$PY_SOURCE/$file" "$HOME_DEST/python/$file"; }
-done
-
-for directory in log_device log_err dlog textfile; do mkdir -p "$WEB_DEST/meow/$directory"; done
-for directory in log_action log_err dlog VPN battery_control_logs; do mkdir -p "$HOME_DEST/python/$directory"; done
-
-echo "==> Set ownership and safe writable permissions"
-chown -R "$RUN_USER:$WEB_GROUP" "$WEB_DEST/meow/config" "$WEB_DEST/meow/data" "$WEB_DEST/meow"/log_device "$WEB_DEST/meow"/log_err "$WEB_DEST/meow"/dlog "$WEB_DEST/meow"/textfile
-find "$WEB_DEST/meow/config" "$WEB_DEST/meow/data" "$WEB_DEST/meow"/log_device "$WEB_DEST/meow"/log_err "$WEB_DEST/meow"/dlog "$WEB_DEST/meow"/textfile -type d -exec chmod 2775 {} +
-find "$WEB_DEST/meow/config" "$WEB_DEST/meow/data" "$WEB_DEST/meow"/log_device "$WEB_DEST/meow"/log_err "$WEB_DEST/meow"/dlog "$WEB_DEST/meow"/textfile -type f -exec chmod 0664 {} +
-chown -R "$RUN_USER:$RUN_USER" "$HOME_DEST/python"
-find "$HOME_DEST/python" -type d -exec chmod 0755 {} +
-find "$HOME_DEST/python" -type f -exec chmod 0644 {} +
-find "$HOME_DEST/python" -type f -name '*.sh' -exec chmod 0755 {} +
-if [[ -d "$HOME_DEST/python/VPN" ]]; then
-  find "$HOME_DEST/python/VPN" -type d -exec chmod 0700 {} +
-  find "$HOME_DEST/python/VPN" -type f -exec chmod 0600 {} +
-fi
-
-php -l "$WEB_DEST/meow/index.php" >/dev/null
-python3 -m py_compile "$HOME_DEST/python/py_multi.py"
-
-echo "==> Install m1 command"
-M1_INSTALLER_DEST="${M1_INSTALLER_DEST:-/opt/mdbiot-installer}"
-mkdir -p "$M1_INSTALLER_DEST"
-for installer_file in install.sh html.7z python.7z SHA256SUMS INSTALL.md m1; do
-  if [[ -f "$SCRIPT_DIR/$installer_file" ]]; then
-    if [[ "$(readlink -f "$SCRIPT_DIR/$installer_file")" != "$(readlink -f "$M1_INSTALLER_DEST/$installer_file" 2>/dev/null || true)" ]]; then
-      install -m 0644 "$SCRIPT_DIR/$installer_file" "$M1_INSTALLER_DEST/$installer_file"
-    fi
-  fi
-done
-chmod 0755 "$M1_INSTALLER_DEST/install.sh"
-if [[ -f "$M1_INSTALLER_DEST/m1" ]]; then
-  chmod 0755 "$M1_INSTALLER_DEST/m1"
-  install -m 0755 "$M1_INSTALLER_DEST/m1" /usr/local/bin/m1
-fi
-
-if [[ "$SKIP_SERVICE" != "1" ]] && command -v systemctl >/dev/null 2>&1; then
-  echo "==> Configure py_multi.service"
+create_service=0
+case "$CREATE_SERVICE" in yes) create_service=1;; no) ;; ask) ask_yes_no "Create/update py_multi.service?" yes && create_service=1;; esac
+if ((create_service)) && ! command -v systemctl >/dev/null 2>&1; then echo "systemd unavailable; service was not created" >&2; create_service=0; fi
+if ((create_service)); then
+  python_exec=/usr/bin/python3; [[ -x "$PYTHON_DEST/.venv/bin/python" ]] && python_exec="$PYTHON_DEST/.venv/bin/python"
   cat > /etc/systemd/system/py_multi.service <<UNIT
 [Unit]
 Description=MDBIoT py_multi runner
 After=network-online.target
 Wants=network-online.target
-
 [Service]
 Type=simple
 User=$RUN_USER
-WorkingDirectory=$HOME_DEST/python
+WorkingDirectory=$PYTHON_DEST
 Environment=PYTHONUNBUFFERED=1
-ExecStart=/usr/bin/python3 $HOME_DEST/python/py_multi.py
+Environment=MDBCARE_WEB_CONFIG=$WEB_DEST/meow/config
+Environment=MDBCARE_BACNET_CACHE=$WEB_DEST/meow/data/bacnet_latest.json
+ExecStart=$python_exec $PYTHON_DEST/py_multi.py
 Restart=always
 RestartSec=5
-
 [Install]
 WantedBy=multi-user.target
 UNIT
   systemctl daemon-reload
-  systemctl enable py_multi.service
-  systemctl restart py_multi.service
-  systemctl is-active --quiet py_multi.service || { systemctl status py_multi.service --no-pager; exit 1; }
+  systemctl enable --now py_multi.service
 fi
 
-if command -v systemctl >/dev/null 2>&1 && systemctl list-unit-files apache2.service >/dev/null 2>&1; then
-  systemctl enable apache2.service >/dev/null 2>&1 || true
-  systemctl restart apache2.service
-fi
-
-if ((KEEP_BACKUPS == 0)); then
-  rm -rf -- "$backup_dir"
-else
-  mapfile -t old_backups < <(find "$BACKUP_ROOT" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort -r | tail -n +$((KEEP_BACKUPS + 1)))
-  for old in "${old_backups[@]}"; do
-    [[ "$old" =~ ^[0-9]{8}_[0-9]{6}$ ]] && rm -rf -- "$BACKUP_ROOT/$old"
-  done
-fi
-
-echo "==================================================="
-echo "ติดตั้ง MDBIoT firmware สำเร็จ"
-echo "Web       : $WEB_DEST/meow"
-echo "Python    : $HOME_DEST/python"
-echo "Backup    : $backup_dir"
-echo "ตรวจสอบ   : systemctl status py_multi.service"
-echo "==================================================="
+command -v php >/dev/null 2>&1 || echo "WARNING: PHP not found; web files deployed but PHP pages cannot run yet." >&2
+[[ -f "$WEB_DEST/meow/config/dvl.json" ]] || echo "WARNING: Runtime web config is missing; import/create it before production use." >&2
+install -d -m 0755 /opt/mdbiot-installer
+for file in install.sh install-windows.ps1 html.7z python.7z SHA256SUMS INSTALL.md m1; do [[ -f "$SOURCE/$file" ]] && install -m 0644 "$SOURCE/$file" "/opt/mdbiot-installer/$file"; done
+[[ -f "$SOURCE/m1" ]] && install -m 0755 "$SOURCE/m1" /usr/local/bin/m1
+chmod 0755 /opt/mdbiot-installer/install.sh 2>/dev/null || true
+echo "Deployment complete"
+echo "  Web    : $WEB_DEST/meow"
+echo "  Python : $PYTHON_DEST"
+echo "  Profile: $PROFILE"
+((create_service)) && systemctl is-active py_multi.service || true
