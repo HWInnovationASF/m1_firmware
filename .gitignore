@@ -1,6 +1,20 @@
 # Do not commit environment secrets.
 .vscode/
 .tmp_config_test/
+.publish_*/
+**/__pycache__/
+*.py[cod]
+html/meow/_deprecated/
+html/meow/chart/.claude/
+html/meow/log.txt
+
+# Local deployment packages and database credentials
+*.7z
+html/meow/con_db.php
+
+# User-added/generated floorplan images
+html/meow/assets/images/floorplans/
+html/meow/assets/images/mp-floor3-25d.png
 
 # Web runtime data, credentials and generated logs
 html/meow/config/*.json

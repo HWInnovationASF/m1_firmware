@@ -1,0 +1,1 @@
+{"PM000001":{"name":"DM1","model":"pm2200","mode":"tcp","ipaddress":"192.168.0.100","port":"502","deviceID":"3"},"PM210001":{"name":"PM Main","model":"dirisq800","ipaddress":"172.16.110.210","deviceID":1,"port":503},"PM112041":{"name":"MDB4","model":"pm2230","ipaddress":"172.16.21.112","deviceID":41,"port":502}}

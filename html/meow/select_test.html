@@ -1,0 +1,2763 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Select style test</title><script src="./assets/js/jquery.min.js"></script><script src="./assets/sweetalert/sweetalert2.all.min.js"></script><link href="./assets/fontawesome-free-7.0.0-web/css/fontawesome.css" rel="stylesheet"><link href="./assets/fontawesome-free-7.0.0-web/css/solid.css" rel="stylesheet"><style>
+#customers {
+  font-family: "Segoe UI", "Noto Sans Thai", Tahoma, Arial, sans-serif;
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  background: #ffffff;
+  border-radius: 14px;
+  /* NOTE: no overflow here — an overflow!=visible would make the table its
+     own scroll container and trap the sticky <th>. Corner clipping is done
+     by .table-scroll (which has overflow:auto + border-radius). */
+  box-shadow: 0 6px 24px rgba(6, 74, 153, 0.07);
+}
+
+#customers td, #customers th {
+  padding: 12px 14px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+#customers th {
+  background: linear-gradient(135deg, #064a99 0%, #0a63c9 100%);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 12.5px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+#customers td {
+  border-bottom: 1px solid #eef1f6;
+  color: #2b3a52;
+  font-size: 14px;
+}
+
+#customers tr:nth-child(even) { background-color: #f7fafe; }
+
+#customers tbody tr:last-child td { border-bottom: 0; }
+
+#customers tr:hover { background-color: #e9f2ff; transition: background-color 0.15s ease; }
+
+/* ============================================================
+   SweetAlert2 — themed + tidy layout (blue / rounded / balanced)
+   ============================================================ */
+/* --- Popup shell: comfortable padding, rounded, soft shadow --- */
+.swal2-popup {
+    padding: 1.8em 2em 1.6em !important;
+    border-radius: 18px !important;
+    font-family: "Segoe UI", "Noto Sans Thai", Tahoma, Arial, sans-serif !important;
+    border: 1px solid #e8edf5 !important;
+    box-shadow: 0 18px 48px rgba(6, 74, 153, 0.22) !important;
+}
+/* --- Title & body: clear vertical rhythm --- */
+.swal2-title {
+    color: #064a99 !important;
+    font-weight: 700 !important;
+    font-size: 20px !important;
+    letter-spacing: .2px !important;
+    padding: 0 !important;
+    margin: 0 0 .35em !important;
+    line-height: 1.35 !important;
+}
+.swal2-html-container {
+    color: #475569 !important;
+    font-size: 14.5px !important;
+    margin: .25em 0 0 !important;
+    line-height: 1.5 !important;
+}
+.swal2-icon { margin: .4em auto 1em !important; }
+
+/* --- Actions row: even gap, tidy spacing, no per-button margins --- */
+.swal2-actions {
+    gap: 12px !important;
+    margin-top: 1.6em !important;
+    flex-wrap: wrap !important;
+}
+/* --- Buttons: equal width so confirm/cancel stay balanced.
+       Covers plain Swal.fire (.swal2-styled) AND the mixin, whose
+       buttonsStyling:false gives .btn.swal-confirm / .btn.swal-cancel --- */
+.swal2-styled,
+.swal-confirm,
+.swal-cancel,
+.swal-danger {
+    min-width: 120px !important;
+    padding: 10px 22px !important;
+    margin: 0 !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+}
+.swal2-styled { box-shadow: 0 6px 16px rgba(6, 74, 153, 0.12) !important; }
+/* Confirm — theme blue (covers both plain Swal.fire and the .swal-confirm mixin) */
+.swal2-styled.swal2-confirm,
+.swal-confirm {
+    background: linear-gradient(135deg, #064a99, #0a63c9) !important;
+    color: #fff !important;
+}
+.swal2-styled.swal2-confirm:focus {
+    box-shadow: 0 0 0 3px rgba(10, 99, 201, 0.35) !important;
+}
+/* Cancel — theme slate grey */
+.swal2-styled.swal2-cancel,
+.swal-cancel {
+    background: #64748b !important;
+    color: #fff !important;
+}
+/* Destructive confirm (delete dialogs) — theme danger red */
+.swal-danger {
+    background: linear-gradient(135deg, #dc2626, #ef4444) !important;
+    color: #fff !important;
+}
+.swal2-styled.swal2-cancel:focus {
+    box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.35) !important;
+}
+/* Auto-close timer bar in theme blue instead of the default grey */
+.swal2-timer-progress-bar {
+    background: linear-gradient(135deg, #064a99, #0a63c9) !important;
+}
+
+/* ============================================================
+   Config Meter form (inside SweetAlert) — tidy, symmetric layout
+   ============================================================ */
+.cfg-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-align: left;
+    margin-top: 6px;
+}
+.cfg-field { display: flex; flex-direction: column; gap: 5px; }
+.cfg-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+    padding-left: 2px;
+}
+.cfg-form .form-control,
+.cfg-form .form-select {
+    width: 100%;
+    border: 1px solid #cdddf3;
+    border-radius: 10px;
+    background-color: #fbfdff;
+    padding: 9px 12px;
+    font-size: 14px;
+    transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+.cfg-form .form-control:focus,
+.cfg-form .form-select:focus {
+    border-color: #0a63c9;
+    box-shadow: 0 0 0 3px rgba(10, 99, 201, 0.15);
+    background-color: #fff;
+    outline: none;
+}
+/* Two equal columns → fields stay symmetric */
+.cfg-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+/* Framed section per mode (RTU / TCP / UDP) */
+.cfg-section {
+    border: 1px solid #e3ecf9;
+    border-radius: 12px;
+    padding: 12px 14px;
+    background: linear-gradient(135deg, #f6faff, #eef4fc);
+}
+.cfg-section h5 {
+    margin: 0 0 10px;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #064a99;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+@media (max-width: 480px) {
+    .cfg-grid { grid-template-columns: 1fr; }
+}
+#customers tr:hover input, #customers tr:hover select {
+  background-color: white;
+}
+.form-control:focus {
+  background-color: white;   /* background when clicked/focused */
+  outline: none;             /* optional: remove blue outline */
+}
+.form-select:focus {
+  background-color: white;   /* background when clicked/focused */
+  outline: none;             /* optional: remove blue outline */
+}
+
+m_breadcrumbs{
+    cursor:pointer;
+    font-weight:600;
+    font-size:15px;
+    color:#334862;
+    padding:4px 2px;
+    transition:color .15s ease;
+}
+m_breadcrumbs:hover {
+  color:#064a99;
+}
+
+
+
+.styled-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 8px 0;
+  font-size: 14px;
+  font-family: "Segoe UI", "Noto Sans Thai", Tahoma, Arial, sans-serif;
+  width: 100%;
+  background: #fff;
+  border-radius: 12px;
+  /* No overflow here — it would trap the sticky <th>. .info-scroll clips the
+     rounded corners and is the scroll container the header sticks within. */
+  box-shadow: 0 4px 16px rgba(6, 74, 153, 0.06);
+}
+
+.styled-table th {
+  background: linear-gradient(135deg, #064a99 0%, #0a63c9 100%);
+  color: #fff;
+  font-weight: 600;
+  font-size: 12.5px;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  text-align: left;
+  padding: 12px 14px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.styled-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid #eef1f6;
+  color: #2b3a52;
+  text-align: left;
+}
+
+.styled-table tr:last-child td { border-bottom: 0; }
+.styled-table tbody tr:nth-child(even),
+.styled-table tr:nth-child(even) { background-color: #f7fafe; }
+.styled-table tbody tr:hover,
+.styled-table tr:hover { background-color: #e9f2ff; }
+
+/* address column → monospace for readability */
+.styled-table td:first-child { font-family: "SFMono-Regular", Consolas, monospace; color: #475569; }
+
+/* info popup: table scroll area + wider modal */
+.swal-info-popup { border-radius: 16px !important; }
+.info-scroll { max-height: 60vh; overflow-y: auto; border-radius: 12px; }
+.info-scroll::-webkit-scrollbar { width: 9px; }
+.info-scroll::-webkit-scrollbar-thumb { background: #cdd9ea; border-radius: 8px; border: 2px solid #fff; }
+
+/* info popup: device detail card */
+.info-card {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px 16px;
+    background: linear-gradient(135deg, #f4f8ff, #eef4fc);
+    border: 1px solid #e3ecf9;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    text-align: left;
+}
+.info-row { display: flex; align-items: center; gap: 8px; }
+.info-key {
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+    min-width: 46px;
+}
+.info-val { font-size: 14px; font-weight: 600; color: #1f2b3d; word-break: break-all; }
+.info-empty { text-align: center; padding: 28px 16px; color: #7b8aa1; }
+.info-empty i { font-size: 30px; color: #b7c8e3; display: block; margin-bottom: 10px; }
+.info-empty p { margin: 0; font-size: 14px; }
+
+
+/* hide scroll bar */
+.hide-scrollbar {
+  overflow: auto;            /* or scroll */
+  scrollbar-width: none;     /* Firefox */
+  -ms-overflow-style: none;  /* IE and Edge */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;             /* Chrome, Safari, Opera */
+}
+
+.hide-scrollbar {
+  overflow: auto;            /* or scroll */
+  scrollbar-width: none;     /* Firefox */
+  -ms-overflow-style: none;  /* IE and Edge */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;             /* Chrome, Safari, Opera */
+}
+
+
+
+
+.group-header {
+    background-color: #d9edf7;
+    cursor: pointer;
+}
+
+.hidden-row {
+    display: none;
+}
+.header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* ============================================================
+   Modern device page (scoped: loaded only on page=device)
+   ============================================================ */
+
+/* --- Card shell --- */
+.card {
+    border: 1px solid #e8edf5;
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(6, 74, 153, 0.06);
+    overflow: hidden;
+}
+.card-header {
+    background: #ffffff;
+    border-bottom: 1px solid #eef1f6;
+    padding: 16px 20px;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.card-body {
+    padding: 20px;
+}
+
+/* --- Breadcrumb bar --- */
+.card-header m_breadcrumbs:not(:first-child)::before {
+    content: "\203A";
+    margin: 0 8px 0 2px;
+    color: #b7c2d2;
+    font-weight: 700;
+}
+
+/* --- Search box --- */
+#myInput {
+    border: 1px solid #e2e8f0;
+    border-radius: 0 10px 10px 0;
+    min-width: 200px;
+}
+.input-group .input-group-text {
+    background: #f4f7fc;
+    border: 1px solid #e2e8f0;
+    border-right: 0;
+    border-radius: 10px 0 0 10px;
+    color: #7b8aa1;
+}
+.input-group:focus-within .input-group-text,
+.input-group:focus-within #myInput {
+    border-color: #0a63c9;
+}
+
+/* --- Buttons: modern, soft, with hover lift --- */
+.btn {
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 8px 16px;
+    border: none;
+    transition: transform .12s ease, box-shadow .15s ease, filter .15s ease;
+}
+.btn:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.03);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+.btn:active { transform: translateY(0); }
+.btn-primary { background: linear-gradient(135deg, #064a99, #0a63c9); color:#fff; }
+.btn-success { background: linear-gradient(135deg, #16a34a, #22c55e); color:#fff; }
+.btn-info    { background: linear-gradient(135deg, #0ea5e9, #38bdf8); color:#fff; }
+.btn-warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); color:#fff; }
+.btn-danger  { background: linear-gradient(135deg, #dc2626, #ef4444); color:#fff; }
+.btn-dark    { background: #334862; color:#fff; }
+
+/* Compact icon-only action buttons inside table rows */
+#customers td .btn {
+    padding: 7px 10px;
+    min-width: 38px;
+    border-radius: 9px;
+}
+#customers td .btn i { font-size: 14px; }
+
+/* --- Form controls in tables --- */
+#customers .form-control,
+#customers .form-select {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 13.5px;
+    padding: 7px 10px;
+    background-color: #fbfdff;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+#customers .form-control:focus,
+#customers .form-select:focus {
+    border-color: #0a63c9;
+    box-shadow: 0 0 0 3px rgba(10, 99, 201, 0.12);
+    background-color: #fff;
+}
+
+/* ============================================================
+   Custom modern dropdown (.msel) — replaces native <select> UI.
+   The native <select> stays in the DOM (hidden) so existing
+   .val()/onchange logic keeps working; a floating panel is used
+   for the styled UI.
+   ============================================================ */
+.msel { position: relative; display: block; width: 100%; }
+.msel--model { max-width: 340px; }
+.msel > select { display: none !important; }
+
+.msel-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    border: 1px solid #cdddf3;
+    border-radius: 10px;
+    background: #eef4fc;
+    padding: 8px 12px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #1f2b3d;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+.msel-btn:hover { border-color: #7fb0ee; background: #e2edfb; }
+.msel.open .msel-btn {
+    border-color: #0a63c9;
+    box-shadow: 0 0 0 3px rgba(10, 99, 201, .15);
+    background: #fff;
+}
+.msel-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.msel-caret {
+    flex-shrink: 0;
+    display: flex;
+    color: #0a63c9;
+    transition: transform .2s ease;
+}
+.msel.open .msel-caret { transform: rotate(180deg); }
+
+/* Floating panel is appended to <body> and positioned with fixed
+   coords so card/table overflow never clips it. */
+.msel-panel {
+    position: fixed;
+    z-index: 3000;
+    min-width: 160px;
+    max-height: 288px;
+    overflow-y: auto;
+    background: #ffffff;
+    border: 1px solid #e6edf7;
+    border-radius: 12px;
+    box-shadow: 0 14px 38px rgba(6, 74, 153, .20);
+    padding: 6px;
+    opacity: 0;
+    transform: translateY(-8px) scale(.98);
+    transform-origin: top center;
+    pointer-events: none;
+    transition: opacity .16s ease, transform .16s ease;
+}
+.msel-panel.show { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+
+.msel-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    color: #2b3a52;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color .12s ease, color .12s ease;
+}
+.msel-option:hover { background: #eef4ff; color: #064a99; }
+.msel-option.selected { background: #e7f0ff; color: #064a99; font-weight: 700; }
+.msel-option.selected::after { content: "\2713"; font-weight: 700; margin-left: 8px; }
+
+.msel-panel::-webkit-scrollbar { width: 9px; }
+.msel-panel::-webkit-scrollbar-track { background: transparent; }
+.msel-panel::-webkit-scrollbar-thumb { background: #cdd9ea; border-radius: 8px; border: 2px solid #fff; }
+.msel-panel::-webkit-scrollbar-thumb:hover { background: #a9c0dc; }
+
+/* --- Badges for Model / Mode / IDs --- */
+.cell-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+.badge-model { background: #e7f0ff; color: #064a99; }
+.badge-id    { background: #eef2f7; color: #475569; font-family: "SFMono-Regular", Consolas, monospace; }
+.badge-mode  { background: #eef2f7; color: #475569; text-transform: uppercase; letter-spacing:.3px; }
+.badge-mode-rtu { background: #e0f2fe; color: #0369a1; }
+.badge-mode-tcp { background: #dcfce7; color: #15803d; }
+.badge-mode-udp { background: #fef3c7; color: #b45309; }
+
+/* --- Model selector / toolbar --- */
+.model-picker-label {
+    font-weight: 700;
+    color: #064a99;
+    font-size: 14px;
+    margin: 0;
+    white-space: nowrap;
+}
+#selectModel {
+    max-width: 340px;
+    min-width: 200px;
+    border: 1px solid #cdddf3;
+    border-radius: 10px;
+    font-weight: 600;
+    color: #1f2b3d;
+    background-color: #fff;
+}
+
+/* --- Empty state --- */
+.model-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: #7b8aa1;
+}
+.model-empty i {
+    font-size: 34px;
+    color: #b7c8e3;
+    margin-bottom: 12px;
+    display: block;
+}
+.model-empty p { margin: 0; font-size: 15px; }
+.model-empty b { color: #334862; }
+
+/* --- Floating "Save All" (model page): always reachable while scrolling --- */
+.fab-save {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    /* Hidden until scrolled down a bit; .show reveals it */
+    transform: translateX(-50%) translateY(20px);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1500;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 13px 26px;
+    border: none;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #064a99, #0a63c9);
+    color: #fff;
+    font-weight: 700;
+    font-size: 14.5px;
+    cursor: pointer;
+    box-shadow: 0 10px 26px rgba(6, 74, 153, 0.38);
+    transition: transform .22s ease, opacity .22s ease, box-shadow .15s ease, filter .15s ease;
+}
+.fab-save.show { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
+.fab-save.show:hover { transform: translateX(-50%) translateY(-2px); filter: brightness(1.05); box-shadow: 0 14px 32px rgba(6, 74, 153, .46); }
+.fab-save.show:active { transform: translateX(-50%); }
+.fab-save i { font-size: 16px; }
+@media (max-width: 640px) {
+    .fab-save { bottom: 14px; padding: 12px 20px; font-size: 13.5px; }
+}
+
+/* --- Table scroll container: scrolls both axes so the sticky header
+       (#customers th) stays visible while browsing rows, and the toolbar
+       above stays put because only this box scrolls. --- */
+.table-scroll {
+    overflow: auto;
+    max-height: calc(100vh - 300px);
+    min-height: 240px;
+    border-radius: 14px;
+}
+@media (max-width: 640px) {
+    .table-scroll { max-height: calc(100vh - 230px); }
+}
+
+/* --- Register start/end range group (sensor + cmlall) --- */
+.rng-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: center;
+}
+.rng-label {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+    white-space: nowrap;
+}
+.rng-group .form-control {
+    max-width: 90px;
+    text-align: center;
+}
+
+/* --- Fade-in on load --- */
+.card { animation: deviceFadeIn .3s ease both; }
+@keyframes deviceFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Responsive --- */
+@media (max-width: 640px) {
+    .card-header { padding: 12px; }
+    .card-body { padding: 12px; }
+    #customers td, #customers th { padding: 9px 8px; font-size: 13px; }
+    .btn { padding: 7px 12px; font-size: 13px; }
+}
+
+</style><style>body{font-family:"Segoe UI","Noto Sans Thai",sans-serif;background:#f4f7fc;margin:0;padding:40px;}h2{color:#064a99;}.demo{display:flex;gap:14px;flex-wrap:wrap;}.warn{color:#b45309;background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:10px 14px;margin-top:18px;max-width:620px;font-size:13.5px;line-height:1.6;}</style></head><body><h2>ทดสอบ select เป็น widget .msel ใน dialog</h2><div class="demo"><button class="btn btn-success" onclick="add_device()">Config Meter (add_device)</button><button class="btn btn-warning" onclick="check_edit({name:'Meter A',model:'dirisq800',mode:'rtu',baurdrate:19200,parity:'even',ipaddress:'',port:502,deviceID:5},'M117830502962948')">Config Meter (check_edit)</button><button class="btn btn-info" onclick="add_cml('M117830502962948')">Add Command List (add_cml)</button></div><div class="warn"><b>สิ่งที่ต้องเช็ค:</b> คลิก select (Model/Mode/Baudrate/Parity/Function) → ต้องเป็นปุ่ม pill + panel ลอยแบบเดียวกับตาราง cmlall, เลือกได้, และเปลี่ยน Mode เป็น RTU/TCP/UDP แล้ว block ต้องสลับตาม.<br><b>ห้ามกดปุ่มยืนยัน (Save/OK)</b> เพราะจะบันทึกข้อมูลจริง — ทดสอบเสร็จให้กด <b>Cancel</b> หรือปิด.</div><script>
+const tasks = document.querySelectorAll(".task");
+
+// Load saved state
+tasks.forEach((task, index) => {
+    task.checked = localStorage.getItem("task" + index) === "true";
+    task.addEventListener("change", () => {
+        localStorage.setItem("task" + index, task.checked);
+    });
+});
+
+let allChecked = false;
+function selectAll() {
+    const tasks = document.querySelectorAll(".task");
+    allChecked = !allChecked;
+
+    tasks.forEach(task => task.checked = allChecked);
+
+    document.getElementById("toggleButton").textContent = allChecked ? "✖ Uncheck All" : "✔ Select All";
+}
+
+function check_info(data) {
+    // Swal.fire(JSON.stringify(data));
+    // console.log(JSON.stringify(data));
+    console.log(data);
+    Swal.fire({
+        title: "<strong>"+data.name+"</strong>",
+        // icon: "info",
+        html: `
+            <div style="display:flex;justify-content:center;flex-direction: column;">
+                <div style="display:flex;"><p>Model :</p><p>${data.model}</p></div>
+                <div style="display:flex;"><p>Mode :</p><p>${data.mode}</p></div>
+                <div style="display:flex;"><p>IP :</p><p>${data.ipaddress}</p></div>
+                <div style="display:flex;"><p>ID :</p><p>${data.deviceID}</p>
+            </div>
+        `,
+        showCloseButton: true,
+        showCancelButton: false,
+        focusConfirm: false,
+        confirmButtonText: `
+            <i class="fa fa-thumbs-up"></i> OK
+        `,
+        cancelButtonAriaLabel: "Thumbs down"
+    });
+    
+}
+
+function show_cml(metersn,data) {
+    (async () => {
+        console.log(data);
+        let cml_txt = '{"C17830537838624":{"read_holding_tcp":{"PM163022":[2999,3111]}},"C17836620000001":{"read_holding_tcp":{"PM163022":[3203,3239]}},"C17836620000002":{"read_holding_tcp":{"PM163022":[21299,21327]}},"C17830656134858":{"read_holding_tcp":{"PM163023":[2999,3111]}},"C17836620000003":{"read_holding_tcp":{"PM163023":[3203,3239]}},"C17836620000004":{"read_holding_tcp":{"PM163023":[21299,21327]}},"C17834815138054":{"read_holding_rtu":{"S1000022":[0,14]}},"C17836610320807":{"analogInput":{"ACH15101":[10100,10121]}},"C17839962001237":{"read_input_tcp":{"IN130001":[100,112]}},"C17840191227768":{"read_holding_tcp":{"PM210001":[45116,45118]}}}'
+        let cml_arr;
+        if(cml_txt){ cml_arr = JSON.parse(cml_txt); } 
+        // console.log(cml_arr);
+        let rowCount = 0;
+        let output_html = '<div class="info-scroll"><table class="styled-table" style="font-size:13px;">';
+        output_html += '<tr>';
+        output_html += '<th>CMD ID</th>';
+        output_html += '<th>Function</th>';
+        output_html += '<th style="text-wrap:nowrap;">Register [start, end]</th>';
+        output_html += '</tr>';
+
+        Object.keys(cml_arr).forEach(key => {
+            if(metersn in Object.values(cml_arr[key])[0]){
+                rowCount++;
+                output_html += `<tr >
+                <td style="text-wrap:nowrap;">${key}</td>
+                <td style="text-wrap:nowrap;">${Object.keys(cml_arr[key])[0]}</td>
+                <td style="text-wrap:nowrap;">${Object.values(cml_arr[key])[0][metersn]}</td>
+                </tr>`;
+            }
+        });
+        output_html += '</table></div>';
+        if(rowCount === 0){
+            output_html = '<div class="info-empty"><i class="fa-regular fa-folder-open"></i><p>มิเตอร์นี้ยังไม่มี CML</p></div>';
+        }
+
+        const infoRow = (label, val) =>
+            `<div class="info-row"><span class="info-key">${label}</span><span class="info-val">${(val ?? '') !== '' ? val : '-'}</span></div>`;
+
+        const { value: formValues } = await Swal.fire({
+            title: `<div style="font-size:20px;font-weight:700;color:#064a99;">${metersn}</div>
+                    <div style="font-size:13px;color:#64748b;font-weight:500;margin-top:2px;">command list</div>`,
+            width: 640,
+            background: "#fff",
+            html:
+                `<div class="info-card">
+                    ${infoRow('Model', data.model)}
+                    ${infoRow('Mode', data.mode)}
+                    ${infoRow('IP', data.ipaddress)}
+                    ${infoRow('ID', data.deviceID)}
+                </div>`+
+                output_html
+                ,
+            showCloseButton: true,
+            focusConfirm: false,
+            confirmButtonText: "OK",
+            customClass: { popup: "swal-info-popup" }
+        })
+
+    })()
+
+}
+
+
+// document.getElementById('table_body').innerHTML = data_html;
+function toggleGroup(groupName) {
+
+    const rows = document.querySelectorAll(`.group-${groupName}`);
+
+    rows.forEach(row => {
+        row.classList.toggle('hidden-row');
+    });
+}
+
+function info_meter(model,data) {
+    // Swal.fire(JSON.stringify(data));
+    // console.log(JSON.stringify(data));
+    let data_html;
+    const bacnetObjectTypes = [
+        'analogInput',
+        'analogOutput',
+        'analogValue',
+        'binaryInput',
+        'binaryOutput',
+        'binaryValue',
+        'multiStateInput',
+        'multiStateOutput',
+        'multiStateValue'
+    ];
+    data_html = '';
+    // console.log(typeof(data));
+    Object.keys(data).forEach(key => {
+        // data_html += `<tr ><td>${key}</td> <td>${data[key]['name']}</td> <td>${data[key]['type']?.type?.toLowerCase() ?? '-'}</td> <td>${data[key]['unit']}</td> </tr>`
+        console.log(key);
+        if (bacnetObjectTypes.includes(key)) {
+            data_html +=
+            `<tr class="group-header" onclick="toggleGroup('${key}')" style="background: linear-gradient(135deg,#064a99,#0a63c9);">
+                <td colspan="4" style="color: #ffffff;">
+                    <div class="header-flex">
+                        <b>${key}</b>
+
+                        <i id="icon-${key}"
+                        class="fa-solid fa-chevron-down">
+                        </i>
+                    </div>
+                </td>
+            </tr>`;
+            Object.keys(data[key]).forEach(key2 => {
+                // console.log(key2);
+                
+             data_html += `
+                <tr  class="group-${key}">
+                    <td>${key2}</td>
+                    <td>${data[key][key2]?.name ?? '-'}</td>
+                    <td>${data[key][key2]?.type?.toLowerCase() ?? '-'}</td>
+                    <td>${data[key][key2]?.unit ?? '-'}</td>
+                </tr>`;
+            });
+        }else{
+            data_html += `<tr ><td>${key}</td> <td>${data[key]['name']}</td> <td>${data[key]['type']?.type?.toLowerCase() ?? '-'}</td> <td>${data[key]['unit']}</td> </tr>`
+
+        }
+        
+    });
+
+    Swal.fire({
+        title: `<div style="font-size:20px;font-weight:700;color:#064a99;">${model}</div>
+                <div style="font-size:13px;color:#64748b;font-weight:500;margin-top:2px;">register map</div>`,
+        width: 720,
+        html: `
+            <div class="info-scroll">
+            <table class="styled-table" style="">
+                <tr>
+                    <th>Address</th>
+                    <th>Name</th>
+                    <th>Data type</th>
+                    <th>Unit</th>
+                </tr>
+                ${data_html}
+            </table>
+            </div>
+        `,
+        showCloseButton: true,
+        showCancelButton: false,
+        focusConfirm: false,
+        confirmButtonText: "OK",
+        customClass: { popup: "swal-info-popup" }
+    });
+
+}
+
+function add_device(meterSN) {
+
+    (async () => {
+        let select_option="";
+        select_option += '<div class="cfg-field"><label class="cfg-label">Model</label><select class="form-select" id="model_">';
+                    select_option += '<option value="dirisq800" >dirisq800</option>';
+                    select_option += '<option value="pm2230" >pm2230</option>';
+                    select_option += '<option value="pm2200" >pm2200</option>';
+                    select_option += '<option value="pm710" >pm710</option>';
+                    select_option += '<option value="cvm_nrg96" >cvm_nrg96</option>';
+                    select_option += '<option value="pm5350" >pm5350</option>';
+                    select_option += '<option value="a30" >a30</option>';
+                    select_option += '<option value="a40" >a40</option>';
+                    select_option += '<option value="pvs100" >pvs100</option>';
+                    select_option += '<option value="copro" >copro</option>';
+                    select_option += '<option value="sun2000-50ktl" >sun2000-50ktl</option>';
+                    select_option += '<option value="janitza" >janitza</option>';
+                    select_option += '<option value="sensor_rs485" >sensor_rs485</option>';
+                    select_option += '<option value="copro2" >copro2</option>';
+                    select_option += '<option value="lovato_dmg800" >lovato_dmg800</option>';
+                    select_option += '<option value="bac_trane_mp" >bac_trane_mp</option>';
+                    select_option += '<option value="bac_ach" >bac_ach</option>';
+                    select_option += '<option value="copro_new" >copro_new</option>';
+                    select_option += '<option value="BENY_BYHV_230SAC" >BENY_BYHV_230SAC</option>';
+                select_option+='</select></div>'
+
+        let baudRates = [300,600,1200,2400,4800,9600,19200,38400,57600,115200,230400];
+        let baud_options = baudRates.map(function(b){ return '<option value="'+b+'"'+(b===9600?' selected':'')+'>'+b+'</option>'; }).join('');
+
+        let input_mode = "";
+        input_mode += '<div id="add-mb-rtu" class="cfg-section" style="display:none;"><h5>RTU</h5><div class="cfg-grid">';
+        input_mode += '<div class="cfg-field"><label class="cfg-label">Baudrate</label><select class="form-select" id="baurdrate_">'+baud_options+'</select></div>';
+        input_mode += '<div class="cfg-field"><label class="cfg-label">Parity</label><select class="form-select" id="parity_"><option value="">-</option><option value="none">none</option><option value="even">even</option></select></div>';
+        input_mode += '</div></div>';
+
+        input_mode += '<div id="add-mb-tcp" class="cfg-section" style="display:none;"><h5>TCP</h5><div class="cfg-grid">';
+        input_mode += '<div class="cfg-field"><label class="cfg-label">IP Address</label><input type="text" class="form-control" id="ipaddress_" value="192.168.0.100"></div>';
+        input_mode += '<div class="cfg-field"><label class="cfg-label">Port</label><input type="text" class="form-control" id="port_" value="502"></div>';
+        input_mode += '</div></div>';
+
+        input_mode += '<div id="add-mb-udp" class="cfg-section" style="display:none;"><h5>UDP</h5><div class="cfg-grid">';
+        input_mode += '<div class="cfg-field"><label class="cfg-label">IP Address</label><input type="text" class="form-control" id="ipaddress_" value="192.168.0.100"></div>';
+        input_mode += '<div class="cfg-field"><label class="cfg-label">Port</label><input type="text" class="form-control" id="port_" value="47808"></div>';
+        input_mode += '</div></div>';
+
+        const { value: formValues } = await Swal.fire({
+        title: 'Config Meter',
+        background: "#fff ",
+        html:
+            '<div class="cfg-form">'+
+            '<div class="cfg-field"><label class="cfg-label">Serial number</label><input type="text" class="form-control" id="sn_" value=""></div>'+
+            '<div class="cfg-field"><label class="cfg-label">Name</label><input type="text" class="form-control" id="name_" value=""></div>'+
+            select_option+
+            '<div class="cfg-field"><label class="cfg-label">Mode</label><select class="form-select" id="mode_" onchange="add_selectMode()">'+
+            '<option value="" >-</option>'+
+            '<option value="rtu" >rtu</option>'+
+            '<option value="tcp" >tcp</option>'+
+            '<option value="udp" >udp</option>'+
+            '</select></div>'+
+            input_mode+
+            '<div class="cfg-field"><label class="cfg-label">Device ID</label><input type="text" class="form-control" id="deviceID_" value="1"></div>'+
+            '</div>'
+            ,
+        didOpen: () => { window.mselEnhanceIn(Swal.getHtmlContainer()); },
+        focusConfirm: true,
+        preConfirm: () => {
+            let res_arr = new Object();
+            res_arr.meter_SN = String(document.getElementById('sn_').value);
+            res_arr.name = String(document.getElementById('name_').value);
+            res_arr.deviceID = String(document.getElementById('deviceID_').value);
+            res_arr.mode = String(document.getElementById('mode_').value);
+            res_arr.model = String(document.getElementById('model_').value);
+            if(res_arr.mode == "rtu"){
+                res_arr.baurdrate = String(document.getElementById('baurdrate_').value);
+                res_arr.parity = String(document.getElementById('parity_').value);
+            }
+            if(res_arr.mode == "tcp"){
+                res_arr.ipaddress = String(document.getElementById('ipaddress_').value);
+                res_arr.port = String(document.getElementById('port_').value);
+            }
+            // console.log(res_arr);
+            
+
+
+            return res_arr;
+        }
+        })
+
+        if(formValues){
+            // Swal.fire(JSON.stringify(formValues))
+            Swal.fire({
+                title: "Json{}",
+                width: 600,
+                text:JSON.stringify(formValues),
+                padding: "3em",
+                color: "#716add",
+                background: "#fff url(../asset/img/trees.png)",
+                backdrop: `
+                    rgba(0,0,123,0.4)
+                    url("../asset/img/nyan-cat.gif")
+                    left top
+                    no-repeat
+                `,
+                showDenyButton: true,
+                // showCancelButton: true,
+                confirmButtonText: 'Yes',
+                denyButtonText: 'No',
+                customClass: {
+                    actions: 'my-actions',
+                    cancelButton: 'order-1 right-gap',
+                    confirmButton: 'order-2',
+                    denyButton: 'order-3',
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // statement ajax save to DB
+                    // Swal.fire('Saved!', '', 'success')
+                    console.log(formValues);
+                    
+                    let timerInterval;
+                    
+                    $.ajax({  
+                        method: 'post',
+                        url: "./fn_api.php?action=device_add&meter_SN="+formValues.meter_SN,
+                        data: JSON.stringify(formValues),
+                        success: function(response) {
+                            console.log(response);
+                            Swal.fire({
+                                title: "Auto close alert!",
+                                html: "I will close in <b></b> milliseconds.",
+                                timer: 1000,
+                                timerProgressBar: true,
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                    const timer = Swal.getPopup().querySelector("b");
+                                    timerInterval = setInterval(() => {
+                                    timer.textContent = `${Swal.getTimerLeft()}`;
+                                    }, 100);
+                                },
+                                willClose: () => {
+                                    clearInterval(timerInterval);
+                                    location.reload('refresh:1');
+                                }
+                                }).then((result) => {
+                                /* Read more about handling dismissals below */
+                                if (result.dismiss === Swal.DismissReason.timer) {
+                                    // console.log("I was closed by the timer");
+                                }
+                            });
+                            // setTimeout( function() { location.reload('refresh:1'); }, 200);
+                        }
+                    });
+
+                    
+                } else if (result.isDenied) {
+                    // Swal.fire('Changes are not saved', '', 'info')
+                }
+            });
+        }
+    })()
+}
+
+function add_cml(meterSN){
+    (async () => {
+        const { value: formValues } = await Swal.fire({
+        title: 'Add Command List',
+        background: "#fff ",
+        html:
+            '<div class="cfg-form">'+
+            '<div class="cfg-field"><label class="cfg-label">Function</label><select class="form-select" id="mode_cml">'+
+            '<option value="read_holding_rtu" >read_holding_rtu</option>'+
+            '<option value="read_input_rtu" >read_input_rtu</option>'+
+            '<option value="read_holding_tcp" >read_holding_tcp</option>'+
+            '<option value="read_input_tcp" >read_input_tcp</option>'+
+            '<option value="recv_holding_rtu" >recv_holding_rtu</option>'+
+            '<option value="analogInput" >analogInput</option>'+
+            '<option value="analogOutput" >analogOutput</option>'+
+            '<option value="analogValue" >analogValue</option>'+
+            '<option value="binaryInput" >binaryInput</option>'+
+            '<option value="binaryValue" >binaryValue</option>'+
+            '<option value="multiStateInput" >multiStateInput</option>'+
+            '<option value="multiStateOutput" >multiStateOutput</option>'+
+            '<option value="multiStateValue" >multiStateValue</option>'+
+            '</select></div>'+
+            '<div class="cfg-grid">'+
+            '<div class="cfg-field"><label class="cfg-label">Start</label><input type="text" class="form-control" id="start_cml" value="0" style="text-align:center;"></div>'+
+            '<div class="cfg-field"><label class="cfg-label">End</label><input type="text" class="form-control" id="end_cml" value="1" style="text-align:center;"></div>'+
+            '</div>'+
+            '</div>'
+            ,
+        didOpen: () => { window.mselEnhanceIn(Swal.getHtmlContainer()); },
+        focusConfirm: true,
+        preConfirm: () => {
+            let val_start = parseInt(document.getElementById('start_cml').value);
+            let val_end = parseInt(document.getElementById('end_cml').value);
+            let res_arr = new Object();
+            res_arr.meter_SN = meterSN;
+            res_arr.fn = String(document.getElementById('mode_cml').value);
+            res_arr.fn = String(document.getElementById('mode_cml').value);
+            res_arr.data = [val_start,val_end];
+            console.log(res_arr.fn,'[',val_start,',',val_end,']');
+            
+            return res_arr;
+        }
+        })
+
+        if(formValues){
+            // Swal.fire(JSON.stringify(formValues))
+            Swal.fire({
+                title: "Json{}",
+                width: 600,
+                text:JSON.stringify(formValues),
+                padding: "3em",
+                color: "#716add",
+                background: "#fff url(../asset/img/trees.png)",
+                backdrop: `
+                    rgba(0,0,123,0.4)
+                    url("../asset/img/nyan-cat.gif")
+                    left top
+                    no-repeat
+                `,
+                showDenyButton: true,
+                // showCancelButton: true,
+                confirmButtonText: 'Yes',
+                denyButtonText: 'No',
+                customClass: {
+                    actions: 'my-actions',
+                    cancelButton: 'order-1 right-gap',
+                    confirmButton: 'order-2',
+                    denyButton: 'order-3',
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // statement ajax save to DB
+                    // Swal.fire('Saved!', '', 'success')
+                    console.log(formValues);
+                    
+                    let timerInterval;
+                    
+                    $.ajax({  
+                        method: 'post',
+                        url: "./fn_api.php?action=cml_add&meter_SN="+formValues.meter_SN,
+                        data: JSON.stringify(formValues),
+                        success: function(response) {
+                            console.log(response);
+                            Swal.fire({
+                                title: "Auto close alert!",
+                                html: "I will close in <b></b> milliseconds.",
+                                timer: 500,
+                                timerProgressBar: true,
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                    const timer = Swal.getPopup().querySelector("b");
+                                    timerInterval = setInterval(() => {
+                                    timer.textContent = `${Swal.getTimerLeft()}`;
+                                    }, 100);
+                                },
+                                willClose: () => {
+                                    clearInterval(timerInterval);
+                                    location.reload('refresh:1');
+                                }
+                                }).then((result) => {
+                                /* Read more about handling dismissals below */
+                                if (result.dismiss === Swal.DismissReason.timer) {
+                                    // console.log("I was closed by the timer");
+                                }
+                            });
+                            // setTimeout( function() { location.reload('refresh:1'); }, 200);
+                        }
+                    });
+
+                    
+                } else if (result.isDenied) {
+                    // Swal.fire('Changes are not saved', '', 'info')
+                }
+            });
+        }
+    })()
+}
+
+function check_edit(data,keys) {
+    // Swal.fire(JSON.stringify(data));
+    // console.log(JSON.stringify(data));
+    let names = data.name;
+    let baurdrate = data.baurdrate != undefined ? data.baurdrate:9600;
+    let parity = data.parity != undefined ? data.parity:"none";
+    let ipaddress = (data.ipaddress != undefined && data.ipaddress !== "") ? data.ipaddress : "192.168.0.100";
+    let port_tcp = data.port != undefined ? data.port:502;
+    let fn_mode = data.mode != undefined ? data.mode:"rtu";
+    let deviceID = data.deviceID != undefined ? data.deviceID:1;
+    let input_mode ="";
+    let baudRates = [300,600,1200,2400,4800,9600,19200,38400,57600,115200,230400];
+    let baud_options = baudRates.map(function(b){ return '<option value="'+b+'"'+(String(baurdrate) === String(b) ? ' selected' : '')+'>'+b+'</option>'; }).join('');
+    // keep a non-standard stored value selectable instead of silently losing it
+    if(baurdrate !== '' && baurdrate != undefined && baudRates.indexOf(Number(baurdrate)) === -1){
+        baud_options = '<option value="'+baurdrate+'" selected>'+baurdrate+'</option>' + baud_options;
+    }
+
+
+
+    // if(ipaddress == "" && baurdrate){fn_mode="rtu";}
+    // if(ipaddress){fn_mode="tcp";}
+
+    let select_option = '<div class="cfg-field"><label class="cfg-label">Model</label><select class="form-select" id="model_'+keys+'">';
+            if(data.model == 'dirisq800'){
+            select_option += '<option value="dirisq800" selected>dirisq800</option>';
+        }else{
+            select_option += '<option value="dirisq800" >dirisq800</option>';
+        }
+            if(data.model == 'pm2230'){
+            select_option += '<option value="pm2230" selected>pm2230</option>';
+        }else{
+            select_option += '<option value="pm2230" >pm2230</option>';
+        }
+            if(data.model == 'pm2200'){
+            select_option += '<option value="pm2200" selected>pm2200</option>';
+        }else{
+            select_option += '<option value="pm2200" >pm2200</option>';
+        }
+            if(data.model == 'pm710'){
+            select_option += '<option value="pm710" selected>pm710</option>';
+        }else{
+            select_option += '<option value="pm710" >pm710</option>';
+        }
+            if(data.model == 'cvm_nrg96'){
+            select_option += '<option value="cvm_nrg96" selected>cvm_nrg96</option>';
+        }else{
+            select_option += '<option value="cvm_nrg96" >cvm_nrg96</option>';
+        }
+            if(data.model == 'pm5350'){
+            select_option += '<option value="pm5350" selected>pm5350</option>';
+        }else{
+            select_option += '<option value="pm5350" >pm5350</option>';
+        }
+            if(data.model == 'a30'){
+            select_option += '<option value="a30" selected>a30</option>';
+        }else{
+            select_option += '<option value="a30" >a30</option>';
+        }
+            if(data.model == 'a40'){
+            select_option += '<option value="a40" selected>a40</option>';
+        }else{
+            select_option += '<option value="a40" >a40</option>';
+        }
+            if(data.model == 'pvs100'){
+            select_option += '<option value="pvs100" selected>pvs100</option>';
+        }else{
+            select_option += '<option value="pvs100" >pvs100</option>';
+        }
+            if(data.model == 'copro'){
+            select_option += '<option value="copro" selected>copro</option>';
+        }else{
+            select_option += '<option value="copro" >copro</option>';
+        }
+            if(data.model == 'sun2000-50ktl'){
+            select_option += '<option value="sun2000-50ktl" selected>sun2000-50ktl</option>';
+        }else{
+            select_option += '<option value="sun2000-50ktl" >sun2000-50ktl</option>';
+        }
+            if(data.model == 'janitza'){
+            select_option += '<option value="janitza" selected>janitza</option>';
+        }else{
+            select_option += '<option value="janitza" >janitza</option>';
+        }
+            if(data.model == 'sensor_rs485'){
+            select_option += '<option value="sensor_rs485" selected>sensor_rs485</option>';
+        }else{
+            select_option += '<option value="sensor_rs485" >sensor_rs485</option>';
+        }
+            if(data.model == 'copro2'){
+            select_option += '<option value="copro2" selected>copro2</option>';
+        }else{
+            select_option += '<option value="copro2" >copro2</option>';
+        }
+            if(data.model == 'lovato_dmg800'){
+            select_option += '<option value="lovato_dmg800" selected>lovato_dmg800</option>';
+        }else{
+            select_option += '<option value="lovato_dmg800" >lovato_dmg800</option>';
+        }
+            if(data.model == 'bac_trane_mp'){
+            select_option += '<option value="bac_trane_mp" selected>bac_trane_mp</option>';
+        }else{
+            select_option += '<option value="bac_trane_mp" >bac_trane_mp</option>';
+        }
+            if(data.model == 'bac_ach'){
+            select_option += '<option value="bac_ach" selected>bac_ach</option>';
+        }else{
+            select_option += '<option value="bac_ach" >bac_ach</option>';
+        }
+            if(data.model == 'copro_new'){
+            select_option += '<option value="copro_new" selected>copro_new</option>';
+        }else{
+            select_option += '<option value="copro_new" >copro_new</option>';
+        }
+            if(data.model == 'BENY_BYHV_230SAC'){
+            select_option += '<option value="BENY_BYHV_230SAC" selected>BENY_BYHV_230SAC</option>';
+        }else{
+            select_option += '<option value="BENY_BYHV_230SAC" >BENY_BYHV_230SAC</option>';
+        }
+        select_option+='</select></div>'
+    let status_display_tcp = "";
+    let status_display_rtu = "";
+    let mode = (fn_mode || 'rtu').toLowerCase();
+    let select_mode = `
+        <div class="cfg-field">
+            <label class="cfg-label">Mode</label>
+            <select class="form-select" id="mode_${keys}" onchange="selectMode('${keys}')">
+                <option value="">-</option>
+                <option value="rtu" ${mode === 'rtu' ? 'selected' : ''}>RTU</option>
+                <option value="tcp" ${mode === 'tcp' ? 'selected' : ''}>TCP</option>
+                <option value="udp" ${mode === 'udp' ? 'selected' : ''}>UDP</option>
+            </select>
+        </div>`;
+    
+
+        input_mode += `
+            <div id="mb-rtu_${keys}" class="cfg-section">
+                <h5>RTU</h5>
+                <div class="cfg-grid">
+                    <div class="cfg-field">
+                        <label class="cfg-label">Baudrate</label>
+                        <select class="form-select" id="baurdrate_${keys}">${baud_options}</select>
+                    </div>
+                    <div class="cfg-field">
+                        <label class="cfg-label">Parity</label>
+                        <select class="form-select" id="parity_${keys}">
+                            <option value="">-</option>
+                            <option value="none" ${parity?.toLowerCase() === 'none' ? 'selected' : ''}>None</option>
+                            <option value="even" ${parity?.toLowerCase() === 'even' ? 'selected' : ''}>Even</option>
+                            <option value="odd" ${parity?.toLowerCase() === 'odd' ? 'selected' : ''}>Odd</option>
+                        </select>
+                    </div>
+                </div>
+            </div>`;
+
+        input_mode += `
+            <div id="mb-tcp_${keys}" class="cfg-section">
+                <h5>TCP</h5>
+                <div class="cfg-grid">
+                    <div class="cfg-field">
+                        <label class="cfg-label">IP Address</label>
+                        <input type="text" class="form-control" id="ipaddress_tcp_${keys}" value="${ipaddress}">
+                    </div>
+                    <div class="cfg-field">
+                        <label class="cfg-label">Port</label>
+                        <input type="text" class="form-control" id="port_tcp_${keys}" value="${port_tcp}">
+                    </div>
+                </div>
+            </div>`;
+
+        input_mode += `
+            <div id="mb-udp_${keys}" class="cfg-section">
+                <h5>UDP</h5>
+                <div class="cfg-grid">
+                    <div class="cfg-field">
+                        <label class="cfg-label">IP Address</label>
+                        <input type="text" class="form-control" id="ipaddress_udp_${keys}" value="${ipaddress}">
+                    </div>
+                    <div class="cfg-field">
+                        <label class="cfg-label">Port</label>
+                        <input type="text" class="form-control" id="port_udp_${keys}" value="${port_tcp}">
+                    </div>
+                </div>
+            </div>`;
+
+    // console.log(data,keys);
+    (async () => {
+        const { value: formValues } = await Swal.fire({
+        title: 'Config Meter',
+        background: "#fff ",
+        html:
+            '<div class="cfg-form">'+
+            '<div class="cfg-field"><label class="cfg-label">Serial number</label><input type="text" class="form-control" id="sn_'+keys+'" value="'+keys+'"></div>'+
+            '<div class="cfg-field"><label class="cfg-label">Name</label><input type="text" class="form-control" id="name_'+keys+'" value="'+names+'"></div>'+
+            select_option+
+            select_mode+
+            input_mode+
+            '<div class="cfg-field"><label class="cfg-label">Device ID</label><input type="text" class="form-control" id="deviceID_'+keys+'" value="'+deviceID+'"></div>'+
+            '</div>'
+            ,
+        didOpen: () => {
+            window.mselEnhanceIn(Swal.getHtmlContainer());
+            selectMode(keys);
+        },
+        focusConfirm: true,
+        preConfirm: () => {
+            // et update_all = {name:String(m_name),devtype:String(m_modeltype),mainconSN:String(m_mainConfig),modelID:String(m_modelID),comtype:String(m_comtype),ipaddress:String(m_ipaddress),maddress:String(m_maddress),mainconID:parseInt(m_mainconID),company_id:parseInt(m_companyID),priority:parseInt(m_priority),baudrate:String(m_baudrate),deleted:0,deviceStatus:'N'};
+            // serialnumber:String(devSN),
+            let res_arr = new Object();
+            res_arr.meter_SN = String(document.getElementById('sn_'+keys).value);
+            res_arr.name = String(document.getElementById('name_'+keys).value);
+            res_arr.model = String(document.getElementById('model_'+keys).value);
+            res_arr.mode = String(document.getElementById('mode_'+keys).value);
+            if(res_arr.mode == "rtu"){
+                res_arr.baurdrate = String(document.getElementById('baurdrate_'+keys).value);
+                res_arr.parity = String(document.getElementById('parity_'+keys).value);
+            }
+            if(res_arr.mode == "tcp"){
+                // form renders these inputs as ipaddress_tcp_/port_tcp_ (see input_mode above)
+                res_arr.ipaddress = String(document.getElementById('ipaddress_tcp_'+keys).value);
+                res_arr.port = String(document.getElementById('port_tcp_'+keys).value);
+            }
+            if(res_arr.mode === "udp"){
+                // res_arr.ipaddress = $('#ipaddress_udp_' + keys).val();
+                // res_arr.port = $('#port_udp_' + keys).val();
+                res_arr.ipaddress = String(document.getElementById('ipaddress_udp_'+keys).value);
+                res_arr.port = String(document.getElementById('port_udp_'+keys).value);
+            }
+            res_arr.deviceID = String(document.getElementById('deviceID_'+keys).value);
+            // return {meter_SN:String(document.getElementById('sn_'+keys).value),name:String(document.getElementById('name_'+keys).value),model:String(document.getElementById('model_'+keys).value),mode:String(document.getElementById('mode_'+keys).value),deleted:0}
+            // console.log(res_arr);
+            return res_arr;
+        }
+        })
+
+        if(formValues){
+            // Swal.fire(JSON.stringify(formValues))
+            Swal.fire({
+                title: "Json{}",
+                width: 600,
+                text:JSON.stringify(formValues),
+                padding: "3em",
+                color: "#716add",
+                background: "#fff url(../asset/img/trees.png)",
+                backdrop: `
+                    rgba(0,0,123,0.4)
+                    url("../asset/img/nyan-cat.gif")
+                    left top
+                    no-repeat
+                `,
+                showDenyButton: true,
+                // showCancelButton: true,
+                confirmButtonText: 'Yes',
+                denyButtonText: 'No',
+                customClass: {
+                    actions: 'my-actions',
+                    cancelButton: 'order-1 right-gap',
+                    confirmButton: 'order-2',
+                    denyButton: 'order-3',
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // statement ajax save to DB
+                    // Swal.fire('Saved!', '', 'success')
+                    // console.log(formValues);
+                    
+                    let timerInterval;
+                    
+                    $.ajax({  
+                        method: 'post',
+                        url: "./fn_api.php?action=device_add&meter_SN="+keys,
+                        data: JSON.stringify(formValues),
+                        success: function(response) {
+                            console.log(response);
+                            Swal.fire({
+                                title: "Auto close alert!",
+                                html: "I will close in <b></b> milliseconds.",
+                                timer: 1000,
+                                timerProgressBar: true,
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                    const timer = Swal.getPopup().querySelector("b");
+                                    timerInterval = setInterval(() => {
+                                    timer.textContent = `${Swal.getTimerLeft()}`;
+                                    }, 100);
+                                },
+                                willClose: () => {
+                                    clearInterval(timerInterval);
+                                    location.reload('refresh:1');
+                                }
+                                }).then((result) => {
+                                /* Read more about handling dismissals below */
+                                if (result.dismiss === Swal.DismissReason.timer) {
+                                    // console.log("I was closed by the timer");
+                                }
+                            });
+                            // setTimeout( function() { location.reload('refresh:1'); }, 200);
+                        }
+                    });
+
+                    
+                } else if (result.isDenied) {
+                    // Swal.fire('Changes are not saved', '', 'info')
+                }
+            });
+        }
+    })()
+
+    
+    
+}
+
+function updateFile(keys) {
+    // console.log(keys);
+    // $.ajax({  
+    //     type: 'GET',
+    //     url: "./fn_api.php?action=device_del",
+    //     data: 'meter_SN='+keys,
+    //     success: function(response) {
+    //         console.log(response);
+    //         setTimeout( function() { location.reload('refresh:1'); }, 200);
+    //     }
+    // });
+    const swalWithBootstrapButtons = Swal.mixin({
+        customClass: {
+            confirmButton: "btn btn-danger swal-danger",
+            cancelButton: "btn btn-secondary swal-cancel"
+        },
+        buttonsStyling: false
+        });
+        swalWithBootstrapButtons.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        cancelButtonText: "No, cancel!",
+        confirmButtonText: "Yes, delete it!",
+        reverseButtons: false
+        }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({  
+                type: 'GET',
+                url: "./fn_api.php?action=device_del",
+                data: 'meter_SN='+keys,
+                success: function(response) {
+                    console.log(response);
+                    swalWithBootstrapButtons.fire({
+                        title: "Deleted!",
+                        text: "Your file has been deleted.",
+                        icon: "success",
+                        timer: 500,
+                        timerProgressBar: true,
+                        didOpen: () => {
+                            Swal.showLoading();
+                            const timer = Swal.getPopup().querySelector("b");
+                            timerInterval = setInterval(() => {
+                                timer.textContent = `${Swal.getTimerLeft()}`;
+                            }, 1000);
+                        },
+                        willClose: () => {
+                            clearInterval(timerInterval);
+                            location.reload('refresh:1');
+                        }
+
+                    });
+                    // setTimeout( function() { location.reload('refresh:1'); }, 200);
+                }
+            });
+            
+        } else if (
+            /* Read more about handling dismissals below */
+            result.dismiss === Swal.DismissReason.cancel
+        ) {
+            swalWithBootstrapButtons.fire({
+            title: "Cancelled",
+            text: "Your imaginary file is safe :)",
+            icon: "error"
+            });
+        }
+    });
+}
+
+function select_model(){
+    let model_name = $('#selectModel').val();
+    console.log(model_name);
+    window.location.href='index.php?page=device&pg=model&modelName='+model_name;
+}
+
+/* ============================================================
+   Custom modern dropdown enhancer.
+   Wraps every native <select> on the device page with a styled
+   button + floating panel, while keeping the native <select> in
+   the DOM (hidden) so all existing .val()/onchange code works.
+   ============================================================ */
+(function(){
+    var CARET = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="m2 5 6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    var openPanel = null;
+
+    function closeOpen(){
+        if(openPanel){
+            openPanel.panel.classList.remove('show');
+            openPanel.wrap.classList.remove('open');
+            openPanel = null;
+        }
+    }
+
+    function enhance(select){
+        if(select.dataset.mselDone) return;
+        select.dataset.mselDone = '1';
+
+        var wrap = document.createElement('div');
+        wrap.className = 'msel' + (select.id === 'selectModel' ? ' msel--model' : '');
+
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'msel-btn';
+        var label = document.createElement('span');
+        label.className = 'msel-label';
+        var caret = document.createElement('span');
+        caret.className = 'msel-caret';
+        caret.innerHTML = CARET;
+        btn.appendChild(label);
+        btn.appendChild(caret);
+
+        var panel = document.createElement('div');
+        panel.className = 'msel-panel';
+        document.body.appendChild(panel); // escape card/table overflow
+
+        function syncLabel(){
+            var o = select.options[select.selectedIndex];
+            label.textContent = o ? o.textContent : '';
+        }
+
+        function buildOptions(){
+            panel.innerHTML = '';
+            Array.prototype.forEach.call(select.options, function(opt, i){
+                var row = document.createElement('div');
+                row.className = 'msel-option' + (i === select.selectedIndex ? ' selected' : '');
+                row.textContent = opt.textContent;
+                row.addEventListener('click', function(e){
+                    e.stopPropagation();
+                    select.selectedIndex = i;
+                    syncLabel();
+                    closeOpen();
+                    // fire change so inline onchange handlers run (select_model, etc.)
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+                panel.appendChild(row);
+            });
+        }
+
+        function place(){
+            var r = btn.getBoundingClientRect();
+            panel.style.minWidth = r.width + 'px';
+            panel.style.left = r.left + 'px';
+            panel.style.top = (r.bottom + 5) + 'px';
+            // flip above if not enough room below
+            var ph = panel.offsetHeight;
+            if(r.bottom + 5 + ph > window.innerHeight && r.top - 5 - ph > 0){
+                panel.style.top = (r.top - 5 - ph) + 'px';
+            }
+        }
+
+        function open(){
+            closeOpen();
+            buildOptions();
+            wrap.classList.add('open');
+            panel.classList.add('show');
+            openPanel = { panel: panel, wrap: wrap };
+            place();
+            // keep selected option in view
+            var sel = panel.querySelector('.msel-option.selected');
+            if(sel) sel.scrollIntoView({ block: 'nearest' });
+        }
+
+        btn.addEventListener('click', function(e){
+            e.stopPropagation();
+            if(openPanel && openPanel.panel === panel){ closeOpen(); }
+            else { open(); }
+        });
+        // clicks inside the panel shouldn't bubble to the global close handler
+        panel.addEventListener('click', function(e){ e.stopPropagation(); });
+
+        // mount: move the native select inside wrap (hidden), add button
+        select.parentNode.insertBefore(wrap, select);
+        wrap.appendChild(select);
+        wrap.appendChild(btn);
+        syncLabel();
+    }
+
+    // Reveal the floating "Save All" only after the user scrolls down a bit.
+    var FAB_SCROLL_THRESHOLD = 180;
+    function updateFabVisibility(ev){
+        var fab = document.getElementById('fabSaveAll');
+        if(!fab) return;
+        // Ignore scrolls happening inside a dropdown panel's own list
+        if(ev && ev.target && ev.target.closest && ev.target.closest('.msel-panel')) return;
+        var st;
+        if(ev && ev.target && ev.target !== document && ev.target.scrollTop != null){
+            st = ev.target.scrollTop;                 // an inner scroll container
+        } else {
+            st = window.scrollY || document.documentElement.scrollTop || 0;
+        }
+        fab.classList.toggle('show', st > FAB_SCROLL_THRESHOLD);
+    }
+
+    function initAll(){
+        document.querySelectorAll('#customers .form-select, #selectModel').forEach(enhance);
+        // Float "Save All" relative to the viewport: move it out of .card, whose
+        // lingering animation transform would otherwise trap position:fixed to the card.
+        var fab = document.getElementById('fabSaveAll');
+        if(fab && fab.parentNode !== document.body){ document.body.appendChild(fab); }
+        // capture=true so scrolls inside any container (e.g. .card-body) are caught
+        window.addEventListener('scroll', updateFabVisibility, true);
+        updateFabVisibility();
+    }
+
+    // Fixed-position panels don't follow scroll/resize — close them instead.
+    // (Ignore scrolls that happen *inside* the panel, e.g. its own option list.)
+    document.addEventListener('click', closeOpen);
+    window.addEventListener('scroll', function(e){
+        if(e.target && e.target.closest && e.target.closest('.msel-panel')) return;
+        closeOpen();
+    }, true);
+    window.addEventListener('resize', closeOpen);
+
+    if(document.readyState === 'loading'){
+        document.addEventListener('DOMContentLoaded', initAll);
+    } else {
+        initAll();
+    }
+
+    // Enhance selects that appear later than page load (e.g. inside SweetAlert
+    // modals). Call from a dialog's didOpen so its <select>s get the same
+    // .msel widget as the tables. The native <select> stays (hidden) so
+    // .val()/preConfirm and inline onchange handlers keep working.
+    window.mselEnhanceIn = function(root){
+        if(!root) return;
+        root.querySelectorAll('select.form-select, select.form-control').forEach(enhance);
+    };
+})();
+
+function selectMode(key){
+
+    const mode = $('#mode_' + key).val();
+
+    $('#mb-rtu_' + key).hide();
+    $('#mb-tcp_' + key).hide();
+    $('#mb-udp_' + key).hide();
+
+    switch(mode){
+        case 'rtu':
+            $('#mb-rtu_' + key).show();
+            break;
+
+        case 'tcp':
+            $('#mb-tcp_' + key).show();
+            break;
+
+        case 'udp':
+            $('#mb-udp_' + key).show();
+            break;
+    }
+}
+
+function add_selectMode(){
+    
+    // let mode = $('#mode_').val();
+    // if(mode == 'rtu'){
+    //     document.getElementById("add-mb-tcp").style.display = "none";
+    //     document.getElementById("add-mb-rtu").style.display = "";
+    // }
+    // if(mode == 'tcp'){
+    //     document.getElementById("add-mb-rtu").style.display = "none";
+    //     document.getElementById("add-mb-tcp").style.display = "";
+    // }
+    // if(mode == 'tcp'){
+    //     document.getElementById("add-mb-rtu").style.display = "none";
+    //     document.getElementById("add-mb-tcp").style.display = "";
+    // }
+    // if(mode == ''){
+    //     document.getElementById("add-mb-rtu").style.display = "none";
+    //     document.getElementById("add-mb-tcp").style.display = "none";
+    // }
+    const mode = $('#mode_').val();
+
+    $("#add-mb-tcp").hide();
+    $("#add-mb-rtu").hide();
+    $("#add-mb-udp").hide();
+
+    switch(mode){
+        case 'rtu':
+            $('#add-mb-rtu').show();
+            break;
+
+        case 'tcp':
+            $('#add-mb-tcp').show();
+            break;
+
+        case 'udp':
+            $('#add-mb-udp').show();
+            break;
+    }
+    
+}
+
+function save_cml(meterSN,cmdid,fn){
+    let val_start = $('#val-start-'+cmdid).val();
+    let val_end = $('#val-end-'+cmdid).val();
+    let val_fn = $('#val-fn-'+cmdid).val();
+    console.log(cmdid,val_fn,'[',val_start,',',val_end,']');
+    let res_arr = new Object();
+    res_arr.cmdid = cmdid;
+    res_arr.fn = val_fn;
+    res_arr.data = [parseInt(val_start),parseInt(val_end)];
+    // res_arr[cmdid] = {functions:[val_start,val_end]};
+    console.log(meterSN,res_arr);
+    
+
+    Swal.fire({
+        title: "Do you want to save the changes?",
+        showDenyButton: false,
+        showCancelButton: true,
+        confirmButtonText: "Save",
+        denyButtonText: `Don't save`
+    }).then((result) => {
+        /* Read more about isConfirmed, isDenied below */
+        if (result.isConfirmed) {
+            let timerInterval;
+            let formValues;
+
+            $.ajax({  
+                method: 'post',
+                url: "./fn_api.php?action=cml_add&meter_SN="+meterSN,
+                data: JSON.stringify(res_arr),
+                success: function(response) {
+                    console.log(response);
+                    Swal.fire({
+                        title: "Auto close alert!",
+                        html: "I will close in <b></b> milliseconds.",
+                        timer: 1000,
+                        timerProgressBar: true,
+                        didOpen: () => {
+                            Swal.showLoading();
+                            const timer = Swal.getPopup().querySelector("b");
+                            timerInterval = setInterval(() => {
+                            timer.textContent = `${Swal.getTimerLeft()}`;
+                            }, 100);
+                        },
+                        willClose: () => {
+                            clearInterval(timerInterval);
+                            location.reload('refresh:1');
+                        }
+                        }).then((result) => {
+                        /* Read more about handling dismissals below */
+                        if (result.dismiss === Swal.DismissReason.timer) {
+                            // console.log("I was closed by the timer");
+                        }
+                    });
+                    // setTimeout( function() { location.reload('refresh:1'); }, 200);
+                }
+            });
+        } else if (result.isDenied) {
+            // Swal.fire("Changes are not saved", "", "info");
+        }
+    });
+}
+
+function del_cml(meterSN,cmdid,fn){
+    console.log(meterSN,cmdid,fn);
+    let timerInterval;
+    const swalWithBootstrapButtons = Swal.mixin({
+        customClass: {
+            confirmButton: "btn btn-danger swal-danger",
+            cancelButton: "btn btn-secondary swal-cancel"
+        },
+        buttonsStyling: false
+        });
+        swalWithBootstrapButtons.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        cancelButtonText: "No, cancel!",
+        confirmButtonText: "Yes, delete it!",
+        reverseButtons: false
+        }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({  
+                type: 'GET',
+                url: "./fn_api.php?action=cml_del",
+                data: 'cmdid='+cmdid,
+                success: function(response) {
+                    console.log(response);
+                    // swalWithBootstrapButtons.fire({
+                    //     title: "Deleted!",
+                    //     text: "Your file has been deleted.",
+                    //     icon: "success",
+                    //     timer: 1500,
+                    //     timerProgressBar: true,
+                    //     didOpen: () => {
+                    //         Swal.showLoading();
+                    //         const timer = Swal.getPopup().querySelector("b");
+                    //         timerInterval = setInterval(() => {
+                    //         timer.textContent = `${Swal.getTimerLeft()}`;
+                    //         }, 100);
+                    //     },
+                    //     willClose: () => {
+                    //         clearInterval(timerInterval);
+                    //         // location.reload('refresh:1');
+                    //     }
+
+                    // });
+                    
+                    Swal.fire({
+                        position: "center",
+                        icon: "success",
+                        title: "Your work has been saved",
+                        showConfirmButton: false,
+                        timer: 1500,
+                        willClose: () => {
+                            location.reload('refresh:1');
+                        }
+                    });
+
+                    // setTimeout( function() { location.reload('refresh:1'); }, 200);
+                }
+            });
+            
+        } else if (
+            /* Read more about handling dismissals below */
+            result.dismiss === Swal.DismissReason.cancel
+        ) {
+            swalWithBootstrapButtons.fire({
+            title: "Cancelled",
+            text: "Your imaginary file is safe :)",
+            icon: "error"
+            });
+        }
+    });
+}
+
+function save_rgl(model,register){
+    let name = $('#model-name-'+model+'-'+register).val();
+    let type = $('#model-type-'+model+'-'+register).val();
+    let unit = $('#model-unit-'+model+'-'+register).val();
+    let decimal = $('#model-decimal-'+model+'-'+register).val();
+    let multiply = $('#model-multiply-'+model+'-'+register).val();
+    console.log(model,register,name,type,unit);
+    let res_arr = new Object();
+    let res_arr2 = new Object();
+    res_arr.name = name;
+    res_arr.type = type;
+    res_arr.unit = unit;
+    res_arr.decimal = decimal != undefined ? decimal : 3;
+    res_arr.multiply = multiply != undefined ? multiply : 1;
+    res_arr2[register] = res_arr;
+
+    Swal.fire({
+        title: "Do you want to save the changes?",
+        showDenyButton: false,
+        showCancelButton: true,
+        confirmButtonText: "Save",
+        denyButtonText: `Don't save`
+    }).then((result) => {
+        /* Read more about isConfirmed, isDenied below */
+        if (result.isConfirmed) {
+            let timerInterval;
+            let formValues;
+
+            $.ajax({  
+                method: 'post',
+                url: "./fn_api.php?action=rgl_add&model="+model+'&register='+register,
+                data: JSON.stringify(res_arr2),
+                success: function(response) {
+                    console.log(response);
+                    Swal.fire({
+                        title: "Auto close alert!",
+                        html: "I will close in <b></b> milliseconds.",
+                        timer: 1000,
+                        timerProgressBar: true,
+                        didOpen: () => {
+                            Swal.showLoading();
+                            const timer = Swal.getPopup().querySelector("b");
+                            timerInterval = setInterval(() => {
+                            timer.textContent = `${Swal.getTimerLeft()}`;
+                            }, 100);
+                        },
+                        willClose: () => {
+                            clearInterval(timerInterval);
+                            // location.reload('refresh:1');
+                        }
+                        }).then((result) => {
+                        /* Read more about handling dismissals below */
+                        if (result.dismiss === Swal.DismissReason.timer) {
+                            // console.log("I was closed by the timer");
+                        }
+                    });
+                    // setTimeout( function() { location.reload('refresh:1'); }, 200);
+                }
+            });
+        } else if (result.isDenied) {
+            // Swal.fire("Changes are not saved", "", "info");
+        }
+    });
+
+}
+
+function save_all_rgl(model){
+    // Collect every register row currently rendered for this model.
+    // Match by the known id prefix so model names containing '-' stay safe.
+    let prefix = 'model-name-'+model+'-';
+    let payload = {};
+    document.querySelectorAll('#customers input[id^="model-name-"]').forEach(function(el){
+        if(!el.id.startsWith(prefix)) return;
+        let register = el.id.slice(prefix.length);
+        let decimal  = $('#model-decimal-'+model+'-'+register).val();
+        let multiply = $('#model-multiply-'+model+'-'+register).val();
+        payload[register] = {
+            name:     $('#model-name-'+model+'-'+register).val(),
+            type:     $('#model-type-'+model+'-'+register).val(),
+            unit:     $('#model-unit-'+model+'-'+register).val(),
+            decimal:  (decimal  !== undefined && decimal  !== '') ? decimal  : 3,
+            multiply: (multiply !== undefined && multiply !== '') ? multiply : 1
+        };
+    });
+    let count = Object.keys(payload).length;
+    if(count === 0){ Swal.fire("No registers to save","","info"); return; }
+
+    Swal.fire({
+        title: "Save all "+count+" registers?",
+        showCancelButton: true,
+        confirmButtonText: "Save all"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                method: 'post',
+                url: "./fn_api.php?action=rgl_add_all&model="+encodeURIComponent(model),
+                data: JSON.stringify(payload),
+                success: function(response) {
+                    console.log(response);
+                    Swal.fire({
+                        title: "Saved "+count+" registers",
+                        icon: "success",
+                        timer: 1200,
+                        showConfirmButton: false
+                    });
+                },
+                error: function(xhr) {
+                    console.log(xhr);
+                    Swal.fire("Save failed","","error");
+                }
+            });
+        }
+    });
+}
+
+function del_rgl(model,register){
+    console.log(model,register);
+    let timerInterval;
+    const swalWithBootstrapButtons = Swal.mixin({
+        customClass: {
+            confirmButton: "btn btn-danger swal-danger",
+            cancelButton: "btn btn-secondary swal-cancel"
+        },
+        buttonsStyling: false
+        });
+        swalWithBootstrapButtons.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        cancelButtonText: "No, cancel!",
+        confirmButtonText: "Yes, delete it!",
+        reverseButtons: false
+        }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({  
+                type: 'GET',
+                url: "./fn_api.php?action=rgl_del",
+                data: 'model='+model+'&register='+register,
+                success: function(response) {
+                    console.log(response);
+                    // swalWithBootstrapButtons.fire({
+                    //     title: "Deleted!",
+                    //     text: "Your file has been deleted.",
+                    //     icon: "success",
+                    //     timer: 1500,
+                    //     timerProgressBar: true,
+                    //     didOpen: () => {
+                    //         Swal.showLoading();
+                    //         const timer = Swal.getPopup().querySelector("b");
+                    //         timerInterval = setInterval(() => {
+                    //         timer.textContent = `${Swal.getTimerLeft()}`;
+                    //         }, 100);
+                    //     },
+                    //     willClose: () => {
+                    //         clearInterval(timerInterval);
+                    //         // location.reload('refresh:1');
+                    //     }
+
+                    // });
+                    
+                    Swal.fire({
+                        position: "center",
+                        icon: "success",
+                        title: "Your work has been saved",
+                        showConfirmButton: false,
+                        timer: 1500,
+                        willClose: () => {
+                            location.reload('refresh:1');
+                        }
+                    });
+
+                    // setTimeout( function() { location.reload('refresh:1'); }, 200);
+                }
+            });
+            
+        } else if (
+            /* Read more about handling dismissals below */
+            result.dismiss === Swal.DismissReason.cancel
+        ) {
+            swalWithBootstrapButtons.fire({
+            title: "Cancelled",
+            text: "Your imaginary file is safe :)",
+            showConfirmButton: false,
+            timer: 500,
+            icon: "error"
+            });
+        }
+    });
+}
+
+function add_rgl2(model){
+    console.log(model);
+}
+function add_rgl(model){
+    
+    let input_mode = "";
+    let input_mode2 = "";
+    input_mode += '<select class="form-select" id="rgl-type">'+
+    '<option value="int sign16">int sign16</option>'+
+    '<option value="int unsign16">int unsign16</option>'+
+    '<option value="float32">float32</option>'+
+    '<option value="float32 inverse">float32 inverse</option>'+
+    '<option value="int16 binary">int16 binary</option>'+
+    '<option value="long unsign32">long unsign32</option>'+
+    '<option value="long unsign32 inverse">long unsign32 inverse</option>'+
+    '<option value="long sign32">long sign32</option>'+
+    '<option value="long unsign64">long unsign64</option>'+
+    '<option value="long sign64">long sign64</option>'+
+    '</select>';
+
+    if(/bac/.test(model)){
+        const bacnetObjectTypes = [
+            'analogInput',
+            'analogOutput',
+            'analogValue',
+            'binaryInput',
+            'binaryOutput',
+            'binaryValue',
+            'multiStateInput',
+            'multiStateOutput',
+            'multiStateValue'
+        ];
+        input_mode2 += '<select class="form-select" id="rgl-fn">';
+        bacnetObjectTypes.forEach(function(item) {
+            input_mode2 += `<option value="${item}">${item}</option>`;
+        });
+
+        input_mode2 += '</select>';
+    }
+    if(model){
+        (async () => {
+
+            const { value: formValues } = await Swal.fire({
+            title: 'New Model',
+            background: "#fff ",
+            html:
+                '<div>Name:<input type="text" class="form-control" id="rgl-name" value=""></div>'+
+                '<div>Register:<input type="text" class="form-control" id="rgl-register" value=""></div>'+
+                '<div>Type:'+input_mode+'</div>'+
+                '<div>Function:'+input_mode2+'</div>'+
+                '<div>Unit:<input type="text" class="form-control" id="rgl-unit" value=""></div>'+
+                '<div>Decimal:<input type="text" class="form-control" id="rgl-decimal" value="3"></div>'+
+                '<div>Multiply:<input type="text" class="form-control" id="rgl-multiply" value="1"></div>'
+                ,
+            focusConfirm: true,
+            preConfirm: () => {
+                let res_arr = new Object();
+                let res_arr2 = new Object();
+                let res_arr3 = new Object();
+                res_arr.name = String(document.getElementById('rgl-name').value);
+                res_arr3.register = String(document.getElementById('rgl-register').value);
+                res_arr.type = String(document.getElementById('rgl-type').value);
+                res_arr.unit = String(document.getElementById('rgl-unit').value);
+                res_arr.decimal = String(document.getElementById('rgl-decimal').value);
+                res_arr.multiply = String(document.getElementById('rgl-multiply').value);
+                // console.log(res_arr);
+                if(/bac/.test(model)){
+                    let bac_fn = String(document.getElementById('rgl-fn').value);
+                    // console.log(`fn Bac == ${bac_fn}`);
+                    res_arr2[bac_fn] ??= {};
+                    res_arr2[bac_fn][res_arr3.register] ??= {};
+                    res_arr2[bac_fn][res_arr3.register] = res_arr;
+
+                }else{
+                    res_arr2[res_arr3.register] = res_arr;
+
+                }
+                
+
+
+                return res_arr2;
+            }
+            })
+
+            if(formValues){
+                // Swal.fire(JSON.stringify(formValues))
+                let key_formV = Object.keys(formValues);
+                if(/bac/.test(model)){
+                    // console.log(Object.keys(formValues[Object.keys(formValues)]));
+                    key_formV = Object.keys(formValues[Object.keys(formValues)]) + `&fn_read=${Object.keys(formValues)}`;
+                }
+                Swal.fire({
+                    title: "Json{}",
+                    width: 600,
+                    text:JSON.stringify(formValues),
+                    padding: "3em",
+                    color: "#716add",
+                    background: "#fff url(../asset/img/trees.png)",
+                    backdrop: `
+                        rgba(0,0,123,0.4)
+                        url("../asset/img/nyan-cat.gif")
+                        left top
+                        no-repeat
+                    `,
+                    showDenyButton: true,
+                    // showCancelButton: true,
+                    confirmButtonText: 'Yes',
+                    denyButtonText: 'No',
+                    customClass: {
+                        actions: 'my-actions',
+                        cancelButton: 'order-1 right-gap',
+                        confirmButton: 'order-2',
+                        denyButton: 'order-3',
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // statement ajax save to DB
+                        // Swal.fire('Saved!', '', 'success')
+                        // console.log(formValues);
+                        // let urlkwh = new window.URL(document.location); 
+                        // urlkwh.searchParams.set("", date_kwh);
+                        // location.replace(urlkwh);
+                        // location.replace("./index.php?page=device&pg=model&modelName="+formValues.model_Nname);
+
+                        // let timerInterval;
+                        // console.log(key_formV);
+                        
+                        
+                        $.ajax({  
+                            method: 'post',
+                            url: "./fn_api.php?action=rgl_add&model="+model+'&register='+key_formV,
+                            data: JSON.stringify(formValues),
+                            success: function(response) {
+                                console.log(response);
+                                Swal.fire({
+                                    title: "Auto close alert!",
+                                    html: "I will close in <b></b> milliseconds.",
+                                    timer: 500,
+                                    timerProgressBar: true,
+                                    didOpen: () => {
+                                        Swal.showLoading();
+                                        const timer = Swal.getPopup().querySelector("b");
+                                        timerInterval = setInterval(() => {
+                                        timer.textContent = `${Swal.getTimerLeft()}`;
+                                        }, 100);
+                                    },
+                                    willClose: () => {
+                                        clearInterval(timerInterval);
+                                        location.reload('refresh:1');
+                                    }
+                                    }).then((result) => {
+                                    /* Read more about handling dismissals below */
+                                    if (result.dismiss === Swal.DismissReason.timer) {
+                                        // console.log("I was closed by the timer");
+                                    }
+                                });
+                                // setTimeout( function() { location.reload('refresh:1'); }, 200);
+                            }
+                        });
+
+                        
+                    } else if (result.isDenied) {
+                        // Swal.fire('Changes are not saved', '', 'info')
+                    }
+                });
+            }
+        })()
+    }else{
+        alert("model is not found!!")
+    }
+}
+
+function add_model(){
+    (async () => {
+
+        const { value: formValues } = await Swal.fire({
+        title: 'New Model',
+        background: "#fff ",
+        html:
+            '<div>Model Name:<input type="text" class="form-control" id="model-name" value=""></div>'
+            ,
+        focusConfirm: true,
+        preConfirm: () => {
+            let res_arr = new Object();
+            res_arr.model_Nname = String(document.getElementById('model-name').value);
+            // console.log(res_arr);
+            
+
+
+            return res_arr;
+        }
+        })
+
+        if(formValues){
+            // Swal.fire(JSON.stringify(formValues))
+            Swal.fire({
+                title: "Json{}",
+                width: 600,
+                text:JSON.stringify(formValues),
+                padding: "3em",
+                color: "#716add",
+                background: "#fff url(../asset/img/trees.png)",
+                backdrop: `
+                    rgba(0,0,123,0.4)
+                    url("../asset/img/nyan-cat.gif")
+                    left top
+                    no-repeat
+                `,
+                showDenyButton: true,
+                // showCancelButton: true,
+                confirmButtonText: 'Yes',
+                denyButtonText: 'No',
+                customClass: {
+                    actions: 'my-actions',
+                    cancelButton: 'order-1 right-gap',
+                    confirmButton: 'order-2',
+                    denyButton: 'order-3',
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // statement ajax save to DB
+                    // Swal.fire('Saved!', '', 'success')
+                    console.log(formValues);
+                    let urlkwh = new window.URL(document.location); 
+                    // urlkwh.searchParams.set("", date_kwh);
+                    // location.replace(urlkwh);
+                    location.replace("./index.php?page=device&pg=model&modelName="+formValues.model_Nname);
+
+                    // let timerInterval;
+                    
+                    // $.ajax({  
+                    //     method: 'post',
+                    //     url: "./fn_api.php?action=rgl_add&model="+formValues.meter_SN,
+                    //     data: JSON.stringify(formValues),
+                    //     success: function(response) {
+                    //         console.log(response);
+                    //         Swal.fire({
+                    //             title: "Auto close alert!",
+                    //             html: "I will close in <b></b> milliseconds.",
+                    //             timer: 1000,
+                    //             timerProgressBar: true,
+                    //             didOpen: () => {
+                    //                 Swal.showLoading();
+                    //                 const timer = Swal.getPopup().querySelector("b");
+                    //                 timerInterval = setInterval(() => {
+                    //                 timer.textContent = `${Swal.getTimerLeft()}`;
+                    //                 }, 100);
+                    //             },
+                    //             willClose: () => {
+                    //                 clearInterval(timerInterval);
+                    //                 location.reload('refresh:1');
+                    //             }
+                    //             }).then((result) => {
+                    //             /* Read more about handling dismissals below */
+                    //             if (result.dismiss === Swal.DismissReason.timer) {
+                    //                 // console.log("I was closed by the timer");
+                    //             }
+                    //         });
+                    //         // setTimeout( function() { location.reload('refresh:1'); }, 200);
+                    //     }
+                    // });
+
+                    
+                } else if (result.isDenied) {
+                    // Swal.fire('Changes are not saved', '', 'info')
+                }
+            });
+        }
+    })()
+}
+
+function del_model(model){
+    let timerInterval;
+    const swalWithBootstrapButtons = Swal.mixin({
+        customClass: {
+            confirmButton: "btn btn-danger swal-danger",
+            cancelButton: "btn btn-secondary swal-cancel"
+        },
+        buttonsStyling: false
+        });
+        swalWithBootstrapButtons.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            cancelButtonText: "No, cancel!",
+            confirmButtonText: "Yes, delete it!",
+            reverseButtons: false
+        }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({  
+                type: 'GET',
+                url: "./fn_api.php?action=rgl_del",
+                data: 'model='+model,
+                success: function(response) {
+                    console.log(response);
+                    
+                    Swal.fire({
+                        position: "center",
+                        icon: "success",
+                        title: "Your work has been saved",
+                        showConfirmButton: false,
+                        timer: 1500,
+                        willClose: () => {
+                            // location.reload('refresh:1');
+                            window.location.href='index.php?page=device&pg=model&modelName=';
+                        }
+                    });
+
+                    // setTimeout( function() { location.reload('refresh:1'); }, 200);
+                }
+            });
+            
+        } else if (
+            /* Read more about handling dismissals below */
+            result.dismiss === Swal.DismissReason.cancel
+        ) {
+            swalWithBootstrapButtons.fire({
+                title: "Cancelled",
+                text: "Your imaginary file is safe :)",
+                showConfirmButton: false,
+                timer: 500,
+                icon: "error"
+            });
+        }
+    });
+}
+
+function import_m1(fname) {
+    // console.log(fname);
+    Swal.fire({
+        title: 'Upload JSON Files',
+        html: '<input type="file" id="fileInput" class="form-control" multiple accept=".json">',
+        showCancelButton: true,
+        confirmButtonText: 'Upload',
+        preConfirm: () => {
+            const files = document.getElementById('fileInput').files;
+            if (files.length === 0) {
+            Swal.showValidationMessage('Please select at least one JSON file.');
+            return false;
+            }
+
+            const formData = new FormData();
+            for (let i = 0; i < files.length; i++) {
+            formData.append('files[]', files[i]);
+            }
+
+            return fetch('upload.php', {
+            method: 'POST',
+            body: formData
+            })
+            .then(res => res.json())
+            .catch(err => {
+            Swal.showValidationMessage(`Upload error: ${err}`);
+            });
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Swal.fire('Success!', 'Files uploaded/merged successfully.', 'success');
+            Swal.fire({
+                title: "Success!",
+                text: "Your action was completed successfully.",
+                icon: "success",
+                confirmButtonText: "OK"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    location.reload(); // Reloads the current page
+                }
+            });
+        }
+    });
+
+
+    
+
+}
+
+function export_m1(fname) {
+    console.log('==========');
+    
+    const swalWithBootstrapButtons = Swal.mixin({
+        customClass: {
+            confirmButton: "btn btn-success swal-confirm",
+            cancelButton: "btn btn-danger swal-cancel"
+        },
+        buttonsStyling: false
+    });
+    swalWithBootstrapButtons.fire({
+        title: "Are you sure?",
+        text: "Export this!",
+        icon: "warning",
+        showCancelButton: true,
+        cancelButtonText: "No",
+        confirmButtonText: "Yes",
+        reverseButtons: false
+    }).then((result) => {
+    if (result.isConfirmed) {
+        // window.location.href = 'mx_export.php';
+        Swal.fire({
+            title: "Auto close alert!",
+            html: "I will close in <b></b> milliseconds.",
+            timer: 1000,
+            timerProgressBar: true,
+            didOpen: () => {
+                Swal.showLoading();
+                const timer = Swal.getPopup().querySelector("b");
+                timerInterval = setInterval(() => {
+                timer.textContent = `${Swal.getTimerLeft()}`;
+                }, 100);
+            },
+            willClose: () => {
+                clearInterval(timerInterval);
+                location.reload('refresh:1');
+            }
+            }).then((result) => {
+            /* Read more about handling dismissals below */
+            if (result.dismiss === Swal.DismissReason.timer) {
+                // console.log("I was closed by the timer");
+                window.location.href = 'mx_export.php';
+            }
+        });
+    } else if (
+        /* Read more about handling dismissals below */
+        result.dismiss === Swal.DismissReason.cancel
+    ) {
+        swalWithBootstrapButtons.fire({
+        title: "Cancelled",
+        text: "Your imaginary file is safe :)",
+        showConfirmButton: false,
+        timer: 500,
+        icon: "error"
+        });
+    }
+});
+
+    
+}
+
+// function update_dvl_2server(fname){
+//     console.log(fname);
+    
+//     let timerInterval;
+//     const swalWithBootstrapButtons = Swal.mixin({
+//         customClass: {
+//             confirmButton: "btn btn-success swal-confirm",
+//             cancelButton: "btn btn-danger swal-cancel"
+//         },
+//         buttonsStyling: false
+//         });
+//         swalWithBootstrapButtons.fire({
+//         title: "Are you sure?",
+//         text: "You won't be upload this!",
+//         icon: "warning",
+//         showCancelButton: true,
+//         cancelButtonText: "No",
+//         confirmButtonText: "Yes",
+//         reverseButtons: false
+//         }).then((result) => {
+//         if (result.isConfirmed) {
+//             $.ajax({  
+//                 type: 'POST',
+//                 url: "./mx_update_dvl.php",
+//                 data: '',
+//                 success: function(response) {
+//                     console.log(response);
+                    
+//                     Swal.fire({
+//                         position: "center",
+//                         icon: "success",
+//                         title: "Your work has been saved",
+//                         showConfirmButton: false,
+//                         timer: 1500,
+//                         willClose: () => {
+//                             // location.reload('refresh:1');
+//                             // window.location.href='index.php?page=device&pg=model&modelName=';
+//                         }
+//                     });
+
+//                     // setTimeout( function() { location.reload('refresh:1'); }, 200);
+//                 }
+//             });
+            
+//         } else if (
+//             /* Read more about handling dismissals below */
+//             result.dismiss === Swal.DismissReason.cancel
+//         ) {
+//             swalWithBootstrapButtons.fire({
+//             title: "Cancelled",
+//             text: "Your imaginary file is safe :)",
+//             showConfirmButton: false,
+//             timer: 500,
+//             icon: "error"
+//             });
+//         }
+//     });
+    
+// }
+
+function update2server(fname){
+    console.log(fname);
+    
+    let timerInterval;
+    const swalWithBootstrapButtons = Swal.mixin({
+        customClass: {
+            confirmButton: "btn btn-success swal-confirm",
+            cancelButton: "btn btn-danger swal-cancel"
+        },
+        buttonsStyling: false
+        });
+        swalWithBootstrapButtons.fire({
+        title: "Are you sure?",
+        text: "You won't be upload this!",
+        icon: "warning",
+        showCancelButton: true,
+        cancelButtonText: "No",
+        confirmButtonText: "Yes",
+        reverseButtons: false
+        }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({  
+                type: 'POST',
+                url: "./mx_update_config2server.php",
+                data: '',
+                success: function(response) {
+                    console.log(response);
+                    
+                    Swal.fire({
+                        position: "center",
+                        icon: "success",
+                        title: "Your work has been saved",
+                        showConfirmButton: false,
+                        timer: 1500,
+                        willClose: () => {
+                            // location.reload('refresh:1');
+                            // window.location.href='index.php?page=device&pg=model&modelName=';
+                        }
+                    });
+
+                    // setTimeout( function() { location.reload('refresh:1'); }, 200);
+                }
+            });
+            
+        } else if (
+            /* Read more about handling dismissals below */
+            result.dismiss === Swal.DismissReason.cancel
+        ) {
+            swalWithBootstrapButtons.fire({
+            title: "Cancelled",
+            text: "Your imaginary file is safe :)",
+            showConfirmButton: false,
+            timer: 500,
+            icon: "error"
+            });
+        }
+    });
+    
+}
+
+function syncModel(fname){
+    console.log(fname);
+    
+    // let timerInterval;
+    // const swalWithBootstrapButtons = Swal.mixin({
+    //     customClass: {
+    //         confirmButton: "btn btn-success swal-confirm",
+    //         cancelButton: "btn btn-danger swal-cancel"
+    //     },
+    //     buttonsStyling: false
+    //     });
+    //     swalWithBootstrapButtons.fire({
+    //     title: "Are you sure?",
+    //     text: "You won't be upload this!",
+    //     icon: "warning",
+    //     showCancelButton: true,
+    //     cancelButtonText: "No",
+    //     confirmButtonText: "Yes",
+    //     reverseButtons: false
+    //     }).then((result) => {
+    //     if (result.isConfirmed) {
+    //         $.ajax({  
+    //             type: 'POST',
+    //             url: "./mx_update_config2server.php",
+    //             data: '',
+    //             success: function(response) {
+    //                 console.log(response);
+                    
+    //                 Swal.fire({
+    //                     position: "center",
+    //                     icon: "success",
+    //                     title: "Your work has been saved",
+    //                     showConfirmButton: false,
+    //                     timer: 1500,
+    //                     willClose: () => {
+    //                         // location.reload('refresh:1');
+    //                         // window.location.href='index.php?page=device&pg=model&modelName=';
+    //                     }
+    //                 });
+
+    //                 // setTimeout( function() { location.reload('refresh:1'); }, 200);
+    //             }
+    //         });
+            
+    //     } else if (
+    //         /* Read more about handling dismissals below */
+    //         result.dismiss === Swal.DismissReason.cancel
+    //     ) {
+    //         swalWithBootstrapButtons.fire({
+    //         title: "Cancelled",
+    //         text: "Your imaginary file is safe :)",
+    //         showConfirmButton: false,
+    //         timer: 500,
+    //         icon: "error"
+    //         });
+    //     }
+    // });
+    
+}
+
+function clear_cml(){
+    let timerInterval;
+    const swalWithBootstrapButtons = Swal.mixin({
+        customClass: {
+            confirmButton: "btn btn-danger swal-danger",
+            cancelButton: "btn btn-secondary swal-cancel"
+        },
+        buttonsStyling: false
+        });
+        swalWithBootstrapButtons.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        cancelButtonText: "No, cancel!",
+        confirmButtonText: "Yes, delete it!",
+        reverseButtons: false
+        }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({  
+                type: 'GET',
+                url: "./clear_cml.php",
+                data: '',
+                success: function(response) {
+                    console.log(response);
+                    
+                    Swal.fire({
+                        position: "center",
+                        icon: "success",
+                        title: "Your work has been saved",
+                        showConfirmButton: false,
+                        timer: 1500,
+                        willClose: () => {
+                            location.reload('refresh:1');
+                            // window.location.href='index.php?page=device&pg=model&modelName=';
+                        }
+                    });
+
+                    // setTimeout( function() { location.reload('refresh:1'); }, 200);
+                }
+            });
+            
+        } else if (
+            /* Read more about handling dismissals below */
+            result.dismiss === Swal.DismissReason.cancel
+        ) {
+            swalWithBootstrapButtons.fire({
+            title: "Cancelled",
+            text: "Your imaginary file is safe :)",
+            showConfirmButton: false,
+            timer: 500,
+            icon: "error"
+            });
+        }
+    });
+}
+
+function myFunction_search() {
+  var input, filter, table, tr, td, i, txtValue;
+  input = document.getElementById("myInput");
+  filter = input.value.toUpperCase();
+  table = document.getElementById("customers");
+  tr = table.getElementsByTagName("tr");
+  for (i = 0; i < tr.length; i++) {
+    // console.log(tr[i].getElementsByTagName("td").length);
+    try {
+        td = tr[i].getElementsByTagName("td")[0];
+        td1 = tr[i].getElementsByTagName("td")[1];
+        td2 = tr[i].getElementsByTagName("td")[2];
+        td3 = tr[i].getElementsByTagName("td")[3];
+        td4 = tr[i].getElementsByTagName("td")[4];
+        console.log();
+        
+
+        if (td && td1 && td2) {
+        txtValue = td.textContent || td.innerText;
+        txtValue1 = td1.textContent || td1.innerText;
+        txtValue2 = td2.textContent || td2.innerText;
+        txtValue3 = td3.textContent || td3.innerText;
+        txtValue4 = td4.textContent || td4.innerText;
+        if ((txtValue.toUpperCase().indexOf(filter) > -1) || (txtValue1.toUpperCase().indexOf(filter) > -1) || (txtValue2.toUpperCase().indexOf(filter) > -1) || (txtValue3.toUpperCase().indexOf(filter) > -1) || (txtValue4.toUpperCase().indexOf(filter) > -1)) {
+            tr[i].style.display = "";
+        } else {
+            tr[i].style.display = "none";
+        }
+        }
+    }
+    catch(err) {
+        // document.getElementById("demo").innerHTML = err.message;
+        console.log("err:",err);
+        
+    }
+
+    // td1 = tr[i].getElementsByTagName("td")[1];
+    // if (td1) {
+    //   txtValue = td1.textContent || td1.innerText;
+    //   if (txtValue.toUpperCase().indexOf(filter) > -1) {
+    //     tr[i].style.display = "";
+    //   } else {
+    //     tr[i].style.display = "none";
+    //   }
+    // }   
+  }
+}
+
+// $( document ).ready(function() {
+//     console.log( "ready!" );
+// });
+</script></body></html>

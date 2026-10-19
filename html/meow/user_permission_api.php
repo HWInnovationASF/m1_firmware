@@ -1,0 +1,7 @@
+<?php
+require_once __DIR__.'/session_bootstrap.php';header('Content-Type: application/json; charset=utf-8');
+if(strtolower((string)($_SESSION['user_type']??''))!=='superadmin'){http_response_code(403);echo json_encode(['error'=>'Superadmin only']);exit;}
+$path=__DIR__.'/config/user_permissions.json';$data=is_file($path)?json_decode(file_get_contents($path),true):[];if(!is_array($data))$data=[];
+$username=(string)($_GET['username']??$_POST['username']??'');if(!preg_match('/^[A-Za-z0-9_]{1,32}$/',$username)){http_response_code(400);echo json_encode(['error'=>'Invalid username']);exit;}
+if($_SERVER['REQUEST_METHOD']==='GET'){echo json_encode($data[$username]??['displays'=>['dashboard'],'functions'=>['report']]);exit;}
+$allowedDisplays=['dashboard','alldata','solar-performance','energy','device','network','communication','about-system'];$allowedFunctions=['report','automation','manual_command','device_config','export'];$input=json_decode(file_get_contents('php://input'),true)?:[];$data[$username]=['displays'=>array_values(array_intersect($allowedDisplays,(array)($input['displays']??[]))),'functions'=>array_values(array_intersect($allowedFunctions,(array)($input['functions']??[])))];$json=json_encode($data,JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);$tmp=$path.'.tmp.'.getmypid();if(file_put_contents($tmp,$json,LOCK_EX)===false||!rename($tmp,$path)){@unlink($tmp);http_response_code(500);echo json_encode(['error'=>'Save failed']);exit;}echo json_encode(['ok'=>true]);

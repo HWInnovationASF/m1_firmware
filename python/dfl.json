@@ -1,0 +1,44 @@
+{
+    "11111": {
+        "updatelog": {
+            "time_interval": 5,
+            "time_offset": 5
+        }
+    },
+    "22222":{
+        "checkinternet": {
+            "time_interval": 300,
+            "time_offset": 0
+        }
+    },
+    "33333":{
+        "updatelog1": {
+            "time_interval": 86400,
+            "time_offset": 3900
+        }
+    },
+    "44444":{
+        "updatelogserver1": {
+            "time_interval": 86400,
+            "time_offset": 3900
+        }
+    },
+    "D17284613784320":{
+        "clearlogfile": {
+            "time_interval": 60,
+            "time_offset": 0
+        }
+    },
+    "D17284613784321":{
+        "clearlogevent": {
+            "time_interval": 86400,
+            "time_offset": 300
+        }
+    },
+    "D17284613784322":{
+        "clearlog5": {
+            "time_interval": 60,
+            "time_offset": 0
+        }
+    }
+}

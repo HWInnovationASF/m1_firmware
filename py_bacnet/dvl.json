@@ -1,0 +1,1374 @@
+{
+    "ACH15101": {
+        "name": "ACH1",
+        "mode": "bacnet",
+        "model": "bac_ach",
+        "ip": "172.16.21.153",
+        "port": "47808"
+    },
+    "ACH25101": {
+        "name": "ACH2",
+        "mode": "bacnet",
+        "model": "bac_ach",
+        "ip": "172.16.21.154",
+        "port": "47808"
+    },
+    "BTUMN101": {
+        "name": "CWP1",
+        "mode": "bacnet",
+        "model": "bac_cwp",
+        "ip": "172.16.21.170",
+        "port": "47808"
+    },
+    "BTUMP101": {
+        "name": "BTU MP",
+        "mode": "bacnet",
+        "model": "bac_btu",
+        "ip": "172.16.21.170",
+        "port": "47808"
+    },
+    "BTUF3101": {
+        "name": "BTU Fac.3",
+        "mode": "bacnet",
+        "model": "bac_btu",
+        "ip": "172.16.21.174",
+        "port": "47808"
+    },
+    "BTUF5101": {
+        "name": "BTU Fac.5",
+        "mode": "bacnet",
+        "model": "bac_btu",
+        "ip": "172.16.21.176",
+        "port": "47808"
+    },
+    "BTUF6101": {
+        "name": "BTU Fac.6",
+        "mode": "bacnet",
+        "model": "bac_btu",
+        "ip": "172.16.21.175",
+        "port": "47808"
+    },
+    "VSD15101": {
+        "name": "VSD1",
+        "mode": "bacnet",
+        "model": "bac_vsd",
+        "ip": "172.16.21.170",
+        "port": "47808"
+    },
+    "VSD25101": {
+        "name": "VSD2",
+        "mode": "bacnet",
+        "model": "bac_vsd",
+        "ip": "172.16.21.146",
+        "port": "47808"
+    },
+    "CHW15101": {
+        "name": "CHW1",
+        "mode": "bacnet",
+        "model": "bac_chw",
+        "ip": "172.16.21.146",
+        "port": "47808"
+    },
+    "CHWP5101": {
+        "name": "CHWP_01",
+        "mode": "bacnet",
+        "model": "bac_chwp_01",
+        "ip": "172.16.21.170",
+        "port": "47808"
+    },
+    "CHWP5102": {
+        "name": "CHWP_02",
+        "mode": "bacnet",
+        "model": "bac_chwp_02",
+        "ip": "172.16.21.146",
+        "port": "47808"
+    },
+    "ACMP2101": {
+        "name": "FCU-2-01",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP2102": {
+        "name": "FCU-2-02",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP2103": {
+        "name": "FCU-2-03",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP2104": {
+        "name": "FCU-2-04",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP2105": {
+        "name": "FCU-2-05",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP2106": {
+        "name": "FCU-2-06",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP2107": {
+        "name": "FCU-2-07",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP2108": {
+        "name": "FCU-2-08",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP2109": {
+        "name": "FCU-2-09",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP2110": {
+        "name": "FCU-2-10",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP2111": {
+        "name": "FCU-2-11",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP2112": {
+        "name": "FCU-2-12",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP2113": {
+        "name": "FCU-2-13",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP3101": {
+        "name": "FCU-3-01",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP3102": {
+        "name": "FCU-3-02",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP3103": {
+        "name": "FCU-3-03",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP3104": {
+        "name": "FCU-3-04",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP3105": {
+        "name": "FCU-3-05",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP3106": {
+        "name": "FCU-3-06",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP3107": {
+        "name": "FCU-3-07",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP3108": {
+        "name": "FCU-3-08",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP3109": {
+        "name": "FCU-3-09",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP3110": {
+        "name": "FCU-3-10",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP3111": {
+        "name": "FCU-3-11",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP3112": {
+        "name": "FCU-3-12",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP3113": {
+        "name": "FCU-3-13",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP3114": {
+        "name": "FCU-3-14",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP3115": {
+        "name": "FCU-3-15",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP3116": {
+        "name": "FCU-3-16",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP3117": {
+        "name": "FCU-3-17",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP3118": {
+        "name": "FCU-3-18",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP3119": {
+        "name": "FCU-3-19",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP3120": {
+        "name": "FCU-3-20",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP4101": {
+        "name": "FCU-4-01",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP4102": {
+        "name": "FCU-4-02",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP4103": {
+        "name": "FCU-4-03",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP4104": {
+        "name": "FCU-4-04",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP4105": {
+        "name": "FCU-4-05",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP4106": {
+        "name": "FCU-4-06",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP4107": {
+        "name": "FCU-4-07",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP4108": {
+        "name": "FCU-4-08",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP4109": {
+        "name": "FCU-4-09",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP4110": {
+        "name": "FCU-4-10",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP4111": {
+        "name": "FCU-4-11",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP4112": {
+        "name": "FCU-4-12",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP4113": {
+        "name": "FCU-4-13",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP4114": {
+        "name": "FCU-4-14",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP4115": {
+        "name": "FCU-4-15",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP4116": {
+        "name": "FCU-4-16",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP4117": {
+        "name": "FCU-4-17",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP4118": {
+        "name": "FCU-4-18",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP4119": {
+        "name": "FCU-4-19",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP4120": {
+        "name": "FCU-4-20",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP4121": {
+        "name": "FCU-4-21",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP4122": {
+        "name": "FCU-4-22",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP4123": {
+        "name": "FCU-4-23",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP4124": {
+        "name": "FCU-4-24",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP4125": {
+        "name": "FCU-4-25",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP4126": {
+        "name": "FCU-4-26",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP4127": {
+        "name": "FCU-4-27",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP4128": {
+        "name": "FCU-4-28",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACMP4129": {
+        "name": "FCU-4-29",
+        "mode": "bacnet",
+        "model": "bac_trane_mp",
+        "ip": "172.16.21.150",
+        "port": "47808"
+    },
+    "ACF51101": {
+        "name": "FCU-B5-1-01",
+        "mode": "bacnet",
+        "model": "bac_trane_501",
+        "ip": "172.16.21.181",
+        "port": "47808"
+    },
+    "ACF51102": {
+        "name": "FCU-B5-1-02",
+        "mode": "bacnet",
+        "model": "bac_trane_501",
+        "ip": "172.16.21.181",
+        "port": "47808"
+    },
+    "ACF51103": {
+        "name": "FCU-B5-1-03",
+        "mode": "bacnet",
+        "model": "bac_trane_501",
+        "ip": "172.16.21.181",
+        "port": "47808"
+    },
+    "ACF51104": {
+        "name": "FCU-B5-1-04",
+        "mode": "bacnet",
+        "model": "bac_trane_501",
+        "ip": "172.16.21.181",
+        "port": "47808"
+    },
+    "ACF51105": {
+        "name": "FCU-B5-1-05",
+        "mode": "bacnet",
+        "model": "bac_trane_501",
+        "ip": "172.16.21.181",
+        "port": "47808"
+    },
+    "ACF51106": {
+        "name": "FCU-B5-1-06",
+        "mode": "bacnet",
+        "model": "bac_trane_501",
+        "ip": "172.16.21.181",
+        "port": "47808"
+    },
+    "ACF51107": {
+        "name": "FCU-B5-1-07",
+        "mode": "bacnet",
+        "model": "bac_trane_501",
+        "ip": "172.16.21.181",
+        "port": "47808"
+    },
+    "ACF51108": {
+        "name": "FCU-B5-1-08",
+        "mode": "bacnet",
+        "model": "bac_trane_501",
+        "ip": "172.16.21.181",
+        "port": "47808"
+    },
+    "ACF5M101": {
+        "name": "FCU-B5-M-01",
+        "mode": "bacnet",
+        "model": "bac_trane_501",
+        "ip": "172.16.21.181",
+        "port": "47808"
+    },
+    "ACF5M102": {
+        "name": "FCU-B5-M-02",
+        "mode": "bacnet",
+        "model": "bac_trane_501",
+        "ip": "172.16.21.181",
+        "port": "47808"
+    },
+    "ACF5M103": {
+        "name": "FCU-B5-M-03",
+        "mode": "bacnet",
+        "model": "bac_trane_501",
+        "ip": "172.16.21.181",
+        "port": "47808"
+    },
+    "ACF5M104": {
+        "name": "FCU-B5-M-04",
+        "mode": "bacnet",
+        "model": "bac_trane_501",
+        "ip": "172.16.21.181",
+        "port": "47808"
+    },
+    "ACF5M105": {
+        "name": "FCU-B5-M-05",
+        "mode": "bacnet",
+        "model": "bac_trane_501",
+        "ip": "172.16.21.181",
+        "port": "47808"
+    },
+    "ACF5M106": {
+        "name": "FCU-B5-M-06",
+        "mode": "bacnet",
+        "model": "bac_trane_501",
+        "ip": "172.16.21.181",
+        "port": "47808"
+    },
+    "ACF52101": {
+        "name": "FCU-B5-2-01",
+        "mode": "bacnet",
+        "model": "bac_trane_502",
+        "ip": "172.16.21.182",
+        "port": "47808"
+    },
+    "ACF52102": {
+        "name": "FCU-B5-2-02",
+        "mode": "bacnet",
+        "model": "bac_trane_502",
+        "ip": "172.16.21.182",
+        "port": "47808"
+    },
+    "ACF52103": {
+        "name": "FCU-B5-2-03",
+        "mode": "bacnet",
+        "model": "bac_trane_502",
+        "ip": "172.16.21.182",
+        "port": "47808"
+    },
+    "ACF52104": {
+        "name": "FCU-B5-2-04",
+        "mode": "bacnet",
+        "model": "bac_trane_502",
+        "ip": "172.16.21.182",
+        "port": "47808"
+    },
+    "ACF52105": {
+        "name": "FCU-B5-2-05",
+        "mode": "bacnet",
+        "model": "bac_trane_502",
+        "ip": "172.16.21.182",
+        "port": "47808"
+    },
+    "ACF52106": {
+        "name": "FCU-B5-2-06",
+        "mode": "bacnet",
+        "model": "bac_trane_502",
+        "ip": "172.16.21.182",
+        "port": "47808"
+    },
+    "ACF52107": {
+        "name": "FCU-B5-2-07",
+        "mode": "bacnet",
+        "model": "bac_trane_502",
+        "ip": "172.16.21.182",
+        "port": "47808"
+    },
+    "ACF52108": {
+        "name": "FCU-B5-2-08",
+        "mode": "bacnet",
+        "model": "bac_trane_502",
+        "ip": "172.16.21.182",
+        "port": "47808"
+    },
+    "ACF52109": {
+        "name": "FCU-B5-2-09",
+        "mode": "bacnet",
+        "model": "bac_trane_502",
+        "ip": "172.16.21.182",
+        "port": "47808"
+    },
+    "ACF52110": {
+        "name": "FCU-B5-2-10",
+        "mode": "bacnet",
+        "model": "bac_trane_502",
+        "ip": "172.16.21.182",
+        "port": "47808"
+    },
+    "ACF53101": {
+        "name": "FCU-B5-3-01",
+        "mode": "bacnet",
+        "model": "bac_trane_502",
+        "ip": "172.16.21.182",
+        "port": "47808"
+    },
+    "ACF53102": {
+        "name": "FCU-B5-3-02",
+        "mode": "bacnet",
+        "model": "bac_trane_502",
+        "ip": "172.16.21.182",
+        "port": "47808"
+    },
+    "ACF53103": {
+        "name": "FCU-B5-3-03",
+        "mode": "bacnet",
+        "model": "bac_trane_502",
+        "ip": "172.16.21.182",
+        "port": "47808"
+    },
+    "ACF53104": {
+        "name": "FCU-B5-3-04",
+        "mode": "bacnet",
+        "model": "bac_trane_502",
+        "ip": "172.16.21.182",
+        "port": "47808"
+    },
+    "ACF53105": {
+        "name": "FCU-B5-3-05",
+        "mode": "bacnet",
+        "model": "bac_trane_502",
+        "ip": "172.16.21.182",
+        "port": "47808"
+    },
+    "ACF53106": {
+        "name": "FCU-B5-3-06",
+        "mode": "bacnet",
+        "model": "bac_trane_502",
+        "ip": "172.16.21.182",
+        "port": "47808"
+    },
+    "ACF53107": {
+        "name": "FCU-B5-3-07",
+        "mode": "bacnet",
+        "model": "bac_trane_502",
+        "ip": "172.16.21.182",
+        "port": "47808"
+    },
+    "ACF53108": {
+        "name": "FCU-B5-3-08",
+        "mode": "bacnet",
+        "model": "bac_trane_502",
+        "ip": "172.16.21.182",
+        "port": "47808"
+    },
+    "ACF53109": {
+        "name": "FCU-B5-3-09",
+        "mode": "bacnet",
+        "model": "bac_trane_502",
+        "ip": "172.16.21.182",
+        "port": "47808"
+    },
+    "ACF53110": {
+        "name": "FCU-B5-3-10",
+        "mode": "bacnet",
+        "model": "bac_trane_502",
+        "ip": "172.16.21.182",
+        "port": "47808"
+    },
+    "ACF54101": {
+        "name": "FCU-B5-4-01",
+        "mode": "bacnet",
+        "model": "bac_trane_502",
+        "ip": "172.16.21.182",
+        "port": "47808"
+    },
+    "ACF54102": {
+        "name": "FCU-B5-4-02",
+        "mode": "bacnet",
+        "model": "bac_trane_502",
+        "ip": "172.16.21.182",
+        "port": "47808"
+    },
+    "ACF54103": {
+        "name": "FCU-B5-4-03",
+        "mode": "bacnet",
+        "model": "bac_trane_502",
+        "ip": "172.16.21.182",
+        "port": "47808"
+    },
+    "ACF54104": {
+        "name": "FCU-B5-4-04",
+        "mode": "bacnet",
+        "model": "bac_trane_502",
+        "ip": "172.16.21.182",
+        "port": "47808"
+    },
+    "ACF54105": {
+        "name": "FCU-B5-4-05",
+        "mode": "bacnet",
+        "model": "bac_trane_502",
+        "ip": "172.16.21.182",
+        "port": "47808"
+    },
+    "ACF54106": {
+        "name": "FCU-B5-4-06",
+        "mode": "bacnet",
+        "model": "bac_trane_502",
+        "ip": "172.16.21.182",
+        "port": "47808"
+    },
+    "ACF54107": {
+        "name": "FCU-B5-4-07",
+        "mode": "bacnet",
+        "model": "bac_trane_502",
+        "ip": "172.16.21.182",
+        "port": "47808"
+    },
+    "ACF54108": {
+        "name": "FCU-B5-4-08",
+        "mode": "bacnet",
+        "model": "bac_trane_502",
+        "ip": "172.16.21.182",
+        "port": "47808"
+    },
+    "ACF63101": {
+        "name": "FCU-B6-3-01",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF63102": {
+        "name": "FCU-B6-3-02",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF63103": {
+        "name": "FCU-B6-3-03",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF63104": {
+        "name": "FCU-B6-3-04",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF63105": {
+        "name": "FCU-B6-3-05",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF63106": {
+        "name": "FCU-B6-3-06",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF63107": {
+        "name": "FCU-B6-3-07",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF63108": {
+        "name": "FCU-B6-3-08",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF63109": {
+        "name": "FCU-B6-3-09",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF63110": {
+        "name": "FCU-B6-3-10",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF63111": {
+        "name": "FCU-B6-3-11",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF63112": {
+        "name": "FCU-B6-3-12",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF63113": {
+        "name": "FCU-B6-3-13",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF63114": {
+        "name": "FCU-B6-3-14",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF63115": {
+        "name": "FCU-B6-3-15",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF63116": {
+        "name": "FCU-B6-3-16",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF63117": {
+        "name": "FCU-B6-3-17",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF63118": {
+        "name": "FCU-B6-3-18",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF63119": {
+        "name": "FCU-B6-3-19",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF63120": {
+        "name": "FCU-B6-3-20",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF63121": {
+        "name": "FCU-B6-3-21",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF63122": {
+        "name": "FCU-B6-3-22",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF63123": {
+        "name": "FCU-B6-3-23",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF63124": {
+        "name": "FCU-B6-3-24",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF63125": {
+        "name": "FCU-B6-3-25",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF63126": {
+        "name": "FCU-B6-3-26",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF63127": {
+        "name": "FCU-B6-3-27",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF63128": {
+        "name": "FCU-B6-3-28",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF64101": {
+        "name": "FCU-B6-4-01",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF64102": {
+        "name": "FCU-B6-4-02",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF64103": {
+        "name": "FCU-B6-4-03",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF64104": {
+        "name": "FCU-B6-4-04",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF64105": {
+        "name": "FCU-B6-4-05",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF64106": {
+        "name": "FCU-B6-4-06",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF64107": {
+        "name": "FCU-B6-4-07",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF64108": {
+        "name": "FCU-B6-4-08",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF64109": {
+        "name": "FCU-B6-4-09",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF64110": {
+        "name": "FCU-B6-4-10",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF64111": {
+        "name": "FCU-B6-4-11",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF64112": {
+        "name": "FCU-B6-4-12",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF64113": {
+        "name": "FCU-B6-4-13",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF64114": {
+        "name": "FCU-B6-4-14",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF64115": {
+        "name": "FCU-B6-4-15",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF64116": {
+        "name": "FCU-B6-4-16",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF64117": {
+        "name": "FCU-B6-4-17",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF64118": {
+        "name": "FCU-B6-4-18",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF64119": {
+        "name": "FCU-B6-4-19",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF64120": {
+        "name": "FCU-B6-4-20",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF64121": {
+        "name": "FCU-B6-4-21",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF64122": {
+        "name": "FCU-B6-4-22",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF64123": {
+        "name": "FCU-B6-4-23",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF64124": {
+        "name": "FCU-B6-4-24",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF64125": {
+        "name": "FCU-B6-4-25",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF64126": {
+        "name": "FCU-B6-4-26",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF65101": {
+        "name": "FCU-B6-5-01",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF65102": {
+        "name": "FCU-B6-5-02",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF65103": {
+        "name": "FCU-B6-5-03",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF65104": {
+        "name": "FCU-B6-5-04",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF65105": {
+        "name": "FCU-B6-5-05",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF65106": {
+        "name": "FCU-B6-5-06",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF65107": {
+        "name": "FCU-B6-5-07",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF65108": {
+        "name": "FCU-B6-5-08",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF65109": {
+        "name": "FCU-B6-5-09",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF65110": {
+        "name": "FCU-B6-5-10",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF65111": {
+        "name": "FCU-B6-5-11",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF65112": {
+        "name": "FCU-B6-5-12",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF65113": {
+        "name": "FCU-B6-5-13",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF65114": {
+        "name": "FCU-B6-5-14",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF65115": {
+        "name": "FCU-B6-5-15",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF65116": {
+        "name": "FCU-B6-5-16",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF65117": {
+        "name": "FCU-B6-5-17",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF65118": {
+        "name": "FCU-B6-5-18",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF65119": {
+        "name": "FCU-B6-5-19",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF65120": {
+        "name": "FCU-B6-5-20",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF65121": {
+        "name": "FCU-B6-5-21",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF65122": {
+        "name": "FCU-B6-5-22",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF65123": {
+        "name": "FCU-B6-5-23",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF65124": {
+        "name": "FCU-B6-5-24",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF65125": {
+        "name": "FCU-B6-5-25",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    },
+    "ACF65126": {
+        "name": "FCU-B6-5-26",
+        "mode": "bacnet",
+        "model": "bac_trane_601",
+        "ip": "172.16.21.183",
+        "port": "47808"
+    }
+}
