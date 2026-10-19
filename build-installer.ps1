@@ -20,6 +20,8 @@ try {
     Remove-Item -LiteralPath $htmlArchive, $pythonArchive -Force -ErrorAction SilentlyContinue
     & $SevenZip a -t7z -mx=9 -mmt=on $htmlArchive '.\html' @commonExcludes `
         '-xr!html\meow\config' '-xr!html\meow\data' '-xr!html\meow\userauth.json' `
+        '-xr!html\meow\con_db.php' '-xr!html\meow\assets\images\floorplans' `
+        '-xr!html\meow\assets\images\mp-floor3-25d.png' `
         '-xr!html\meow\log_device' '-xr!html\meow\log_err' '-xr!html\meow\dlog' '-xr!html\meow\textfile'
     if ($LASTEXITCODE -ne 0) { throw 'Failed to build html.7z' }
     & $SevenZip a -t7z -mx=9 -mmt=on $pythonArchive '.\python' @commonExcludes `
