@@ -25,5 +25,8 @@ cd m1_firmware
 See [INSTALL.md](INSTALL.md) for existing-server paths, non-interactive usage,
 optional dependencies, full-stack installation, and update instructions.
 
+Successful installs automatically maintain runtime logs before the service is
+restarted. Use `--skip-log-maintenance` only when maintenance must be deferred.
+
 สำหรับเครื่องใหม่ที่ยังไม่มี Web server, Database หรือ Python โปรดอ่าน
 [คู่มือติดตั้งเครื่องใหม่ภาษาไทย](FRESH_INSTALL_TH.md)

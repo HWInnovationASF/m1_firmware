@@ -19,6 +19,7 @@ WEB_SERVER="${WEB_SERVER:-existing}"
 DATABASE="${DATABASE:-existing}"
 YES="${YES:-0}"
 AUTOMATION_MODE="${AUTOMATION_MODE:-preserve}"
+POST_INSTALL_LOG_MAINTENANCE="${POST_INSTALL_LOG_MAINTENANCE:-1}"
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 WORK="$(mktemp -d /tmp/mdbiot-install.XXXXXX)"
 trap 'rm -rf -- "$WORK"' EXIT
@@ -43,6 +44,7 @@ install, stop, enable or reconfigure an existing web server or database.
   --python-deps ask|yes|no
   --service ask|yes|no
   --automation-mode off|simulation|live|preserve
+  --skip-log-maintenance     Do not run log maintenance after deployment
   --source-dir PATH          Directory containing html.7z and python.7z
   -y, --yes                  Non-interactive; accept selected operations
   -h, --help
@@ -64,6 +66,7 @@ while (($#)); do
     --python-deps) INSTALL_PYTHON_DEPS="${2:?missing value}"; shift ;;
     --service) CREATE_SERVICE="${2:?missing value}"; shift ;;
     --automation-mode) AUTOMATION_MODE="${2:?missing mode}"; shift ;;
+    --skip-log-maintenance) POST_INSTALL_LOG_MAINTENANCE=0 ;;
     --source-dir) SOURCE_DIR="${2:?missing source path}"; shift ;;
     -y|--yes) YES=1 ;;
     -h|--help) usage; exit 0 ;;
@@ -81,6 +84,7 @@ case "$CREATE_SERVICE" in ask|yes|no) ;; *) echo "--service must be ask, yes or 
 case "$WEB_SERVER" in existing|none|apache|nginx) ;; *) echo "Invalid web server mode" >&2; exit 2;; esac
 case "$DATABASE" in existing|none|mariadb) ;; *) echo "Invalid database mode" >&2; exit 2;; esac
 case "$AUTOMATION_MODE" in off|simulation|live|preserve) ;; *) echo "Invalid automation mode" >&2; exit 2;; esac
+case "$POST_INSTALL_LOG_MAINTENANCE" in 0|1) ;; *) echo "POST_INSTALL_LOG_MAINTENANCE must be 0 or 1" >&2; exit 2;; esac
 
 is_wsl=0
 grep -qi microsoft /proc/version 2>/dev/null && is_wsl=1
@@ -188,6 +192,20 @@ if ((install_python_deps)); then
   "$PYTHON_DEST/.venv/bin/python" -m pip install --upgrade pip
   [[ ! -f "$PYTHON_DEST/requirements.txt" ]] || "$PYTHON_DEST/.venv/bin/python" -m pip install -r "$PYTHON_DEST/requirements.txt"
   chown -R "$RUN_USER:$WEB_GROUP" "$PYTHON_DEST/.venv"
+fi
+
+if [[ "$POST_INSTALL_LOG_MAINTENANCE" == 1 && -f "$PYTHON_DEST/post_firmware_maintenance.py" ]]; then
+  echo "==> Maintaining runtime logs"
+  maintenance_python=/usr/bin/python3
+  [[ -x "$PYTHON_DEST/.venv/bin/python" ]] && maintenance_python="$PYTHON_DEST/.venv/bin/python"
+  if command -v runuser >/dev/null 2>&1; then
+    maintenance_command=(runuser -u "$RUN_USER" -- "$maintenance_python" "$PYTHON_DEST/post_firmware_maintenance.py")
+  else
+    maintenance_command=("$maintenance_python" "$PYTHON_DEST/post_firmware_maintenance.py")
+  fi
+  if ! "${maintenance_command[@]}"; then
+    echo "WARNING: Firmware deployed, but post-install log maintenance reported an error." >&2
+  fi
 fi
 
 if [[ "$AUTOMATION_MODE" != preserve && -f "$WEB_DEST/meow/config/automation_control.json" ]] && command -v php >/dev/null 2>&1; then

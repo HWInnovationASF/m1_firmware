@@ -82,7 +82,14 @@ and run the Python process with another supervisor.
 --install-missing ask|yes|no  Minimal deployment tools only
 --python-deps ask|yes|no      Virtual environment and requirements
 --service ask|yes|no          py_multi.service
+--skip-log-maintenance        Skip automatic post-install log maintenance
 ```
+
+After a successful deployment, the installer normally runs log maintenance
+before restarting the Python service. It applies the packaged retention and
+compression policies to `log_action`, `dlog`, `log_err`, and Battery control
+logs. Maintenance errors are reported as warnings and do not roll back an
+otherwise successful firmware installation.
 
 ## Preserved runtime data
 
