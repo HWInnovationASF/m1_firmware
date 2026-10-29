@@ -128,6 +128,7 @@ Config, User, Device data, VPN และ Log จะไม่ถูกบรร�
 systemctl status apache2 --no-pager
 systemctl status mariadb --no-pager
 m1 status
+m1 log
 m1 logs 100
 ```
 
@@ -144,6 +145,7 @@ curl -I http://127.0.0.1/meow/
 ```bash
 m1 status             # ตรวจ Python service
 sudo m1 restart       # Restart Python service
+m1 log                # ดู Log แบบต่อเนื่อง (กด Ctrl+C เพื่อหยุด)
 m1 logs 100           # ดู Log ล่าสุด
 m1 update             # ดาวน์โหลดไฟล์ล่าสุดใน Git repository
 sudo m1 install       # Deploy package ที่ดาวน์โหลดแล้ว

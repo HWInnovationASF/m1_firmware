@@ -31,16 +31,19 @@ case "$COMMAND" in
     ;;
   status) need_systemd; systemctl status py_multi.service --no-pager ;;
   restart) need_systemd; sudo systemctl restart py_multi.service; systemctl is-active py_multi.service ;;
+  log) need_systemd; exec journalctl -u py_multi.service -f ;;
   logs) need_systemd; journalctl -u py_multi.service -n "${1:-100}" --no-pager ;;
-  version) echo "MDBIoT M1 installer 20261008" ;;
+  version) echo "MDBIoT M1 installer 20261029" ;;
   help|-h|--help)
     cat <<'EOF'
-Usage: m1 {install|update|status|restart|logs [N]|version}
+Usage: m1 {install|update|status|restart|log|logs [N]|version}
 
 Examples:
   sudo m1 install --deploy-only --web-dir /var/www/html --python-dir /opt/mdbiot/python
   sudo m1 install --full --web-server nginx --database mariadb
   m1 status
+  m1 log                 # Follow live service log (Ctrl+C to stop)
+  m1 logs 100            # Show the latest 100 service log lines
 EOF
     ;;
   *) echo "Unknown command: $COMMAND" >&2; exit 2 ;;

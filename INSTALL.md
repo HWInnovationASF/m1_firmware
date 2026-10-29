@@ -102,6 +102,7 @@ created or imported on a fresh device before production use.
 ```bash
 m1 status
 sudo m1 restart
+m1 log
 m1 logs 100
 m1 update
 sudo m1 install
