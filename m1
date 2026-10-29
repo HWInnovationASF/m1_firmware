@@ -5,11 +5,23 @@ COMMAND="${1:-help}"
 if (($#)); then shift; fi
 
 SELF_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-INSTALLER_DIR="${M1_INSTALLER_DIR:-/opt/mdbiot-installer}"
-if [[ -f "$PWD/install.sh" && -f "$PWD/html.7z" && -f "$PWD/python.7z" ]]; then
-  INSTALLER_DIR="$PWD"
-elif [[ -f "$SELF_DIR/install.sh" && -f "$SELF_DIR/html.7z" && -f "$SELF_DIR/python.7z" ]]; then
-  INSTALLER_DIR="$SELF_DIR"
+INSTALLER_DIR="${M1_INSTALLER_DIR:-}"
+
+has_installer_bundle() {
+  [[ -f "$1/install.sh" && -f "$1/html.7z" && -f "$1/python.7z" ]]
+}
+
+if [[ -z "$INSTALLER_DIR" ]]; then
+  runtime_user="${SUDO_USER:-${USER:-mdbcare}}"
+  runtime_home="$(getent passwd "$runtime_user" 2>/dev/null | cut -d: -f6)"
+  [[ -n "$runtime_home" ]] || runtime_home="/home/$runtime_user"
+  for candidate in "$PWD" "$SELF_DIR" "$runtime_home/m1_firmware" /opt/mdbiot-installer; do
+    if has_installer_bundle "$candidate"; then
+      INSTALLER_DIR="$candidate"
+      break
+    fi
+  done
+  INSTALLER_DIR="${INSTALLER_DIR:-/opt/mdbiot-installer}"
 fi
 
 run_installer() {
@@ -25,7 +37,7 @@ need_systemd() {
 case "$COMMAND" in
   install) run_installer "$@" ;;
   update)
-    git -C "$INSTALLER_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo "Run this command from the cloned Git repository." >&2; exit 1; }
+    git -C "$INSTALLER_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo "Firmware repository not found. Set M1_INSTALLER_DIR or clone it to ~/m1_firmware." >&2; exit 1; }
     if [[ $EUID -eq 0 && -n "${SUDO_USER:-}" ]]; then sudo -u "$SUDO_USER" git -C "$INSTALLER_DIR" pull --ff-only; else git -C "$INSTALLER_DIR" pull --ff-only; fi
     echo "Latest files downloaded. Apply them with: sudo m1 install"
     ;;
@@ -39,7 +51,7 @@ case "$COMMAND" in
 Usage: m1 {install|update|status|restart|log|logs [N]|version}
 
 Examples:
-  sudo m1 install --deploy-only --web-dir /var/www/html --python-dir /opt/mdbiot/python
+  sudo m1 install --deploy-only --web-dir /var/www/html --python-dir /home/mdbcare/python
   sudo m1 install --full --web-server nginx --database mariadb
   m1 status
   m1 log                 # Follow live service log (Ctrl+C to stop)
