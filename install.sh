@@ -245,6 +245,16 @@ command -v php >/dev/null 2>&1 || echo "WARNING: PHP not found; web files deploy
 install -d -m 0755 /opt/mdbiot-installer
 for file in install.sh install-windows.ps1 html.7z python.7z SHA256SUMS INSTALL.md m1; do [[ -f "$SOURCE/$file" ]] && install -m 0644 "$SOURCE/$file" "/opt/mdbiot-installer/$file"; done
 [[ -f "$SOURCE/m1" ]] && install -m 0755 "$SOURCE/m1" /usr/local/bin/m1
+if [[ -f "$SOURCE/m1-firmware-update" ]]; then
+  install -m 0755 "$SOURCE/m1-firmware-update" /usr/local/sbin/m1-firmware-update
+  cat > /etc/sudoers.d/mdbiot-firmware-update <<'SUDOERS'
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/m1-firmware-update check
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/m1-firmware-update install
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/m1-firmware-update status
+SUDOERS
+  chmod 0440 /etc/sudoers.d/mdbiot-firmware-update
+  visudo -cf /etc/sudoers.d/mdbiot-firmware-update >/dev/null
+fi
 chmod 0755 /opt/mdbiot-installer/install.sh 2>/dev/null || true
 echo "Deployment complete"
 echo "  Web    : $WEB_DEST/meow"

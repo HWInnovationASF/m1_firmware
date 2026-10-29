@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+ACTION="${1:-status}"
+case "$ACTION" in check|install|status) ;; *) echo "Unsupported firmware action" >&2; exit 2;; esac
+exec /usr/bin/python3 /home/mdbcare/python/firmware_update_manager.py "$ACTION"
