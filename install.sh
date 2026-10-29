@@ -254,6 +254,31 @@ www-data ALL=(root) NOPASSWD: /usr/local/sbin/m1-firmware-update status
 SUDOERS
   chmod 0440 /etc/sudoers.d/mdbiot-firmware-update
   visudo -cf /etc/sudoers.d/mdbiot-firmware-update >/dev/null
+  cat > /etc/systemd/system/m1-firmware-check.service <<'UNIT'
+[Unit]
+Description=Check for MDBIoT M1 firmware updates
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/m1-firmware-update check
+UNIT
+  cat > /etc/systemd/system/m1-firmware-check.timer <<'UNIT'
+[Unit]
+Description=Periodically check for MDBIoT M1 firmware updates
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=15min
+RandomizedDelaySec=2min
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+UNIT
+  systemctl daemon-reload
+  systemctl enable --now m1-firmware-check.timer
 fi
 chmod 0755 /opt/mdbiot-installer/install.sh 2>/dev/null || true
 echo "Deployment complete"
