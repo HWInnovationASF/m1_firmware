@@ -7,6 +7,11 @@ The installer is **deploy-first**. By default it deploys the web application and
 Python runtime without installing, stopping, enabling, or reconfiguring an
 existing Apache, nginx, AppServ, MySQL, or MariaDB installation.
 
+For the standard `mdbcare` runtime, Python defaults to
+`/home/mdbcare/python`. Deploy-only mode also defaults Python dependency
+installation and `py_multi.service` recreation to `no`, preserving the
+existing runtime unless those options are explicitly enabled.
+
 ## Raspberry Pi OS, Debian, or Ubuntu
 
 ```bash
@@ -22,7 +27,7 @@ service. A typical existing-server deployment is:
 ```bash
 sudo ./m1 install --deploy-only \
   --web-dir /var/www/html \
-  --python-dir /opt/mdbiot/python
+  --python-dir /home/mdbcare/python
 ```
 
 For unattended installation, make each optional choice explicit:

@@ -6,15 +6,15 @@ IFS=$'\n\t'
 REPO="${REPO:-https://github.com/HWInnovationASF/m1_firmware.git}"
 SOURCE_DIR="${SOURCE_DIR:-}"
 WEB_DEST="${WEB_DEST:-/var/www/html}"
-PYTHON_DEST="${PYTHON_DEST:-${HOME_DEST:+$HOME_DEST/python}}"
-PYTHON_DEST="${PYTHON_DEST:-/opt/mdbiot/python}"
 RUN_USER="${RUN_USER:-${SUDO_USER:-mdbcare}}"
+PYTHON_DEST="${PYTHON_DEST:-${HOME_DEST:+$HOME_DEST/python}}"
+PYTHON_DEST="${PYTHON_DEST:-/home/$RUN_USER/python}"
 WEB_GROUP="${WEB_GROUP:-www-data}"
 PROFILE="${PROFILE:-auto}"
 INSTALL_MODE="${INSTALL_MODE:-deploy-only}"
 INSTALL_MISSING="${INSTALL_MISSING:-ask}"
-INSTALL_PYTHON_DEPS="${INSTALL_PYTHON_DEPS:-ask}"
-CREATE_SERVICE="${CREATE_SERVICE:-ask}"
+INSTALL_PYTHON_DEPS="${INSTALL_PYTHON_DEPS:-no}"
+CREATE_SERVICE="${CREATE_SERVICE:-no}"
 WEB_SERVER="${WEB_SERVER:-existing}"
 DATABASE="${DATABASE:-existing}"
 YES="${YES:-0}"
@@ -54,7 +54,7 @@ EOF
 while (($#)); do
   case "$1" in
     --deploy-only) INSTALL_MODE=deploy-only ;;
-    --full) INSTALL_MODE=full; INSTALL_MISSING=yes; CREATE_SERVICE=yes ;;
+    --full) INSTALL_MODE=full; INSTALL_MISSING=yes; INSTALL_PYTHON_DEPS=yes; CREATE_SERVICE=yes ;;
     --profile) PROFILE="${2:?missing profile}"; shift ;;
     --web-dir) WEB_DEST="${2:?missing web path}"; shift ;;
     --python-dir) PYTHON_DEST="${2:?missing python path}"; shift ;;
