@@ -7,10 +7,12 @@ from pathlib import Path
 import re
 import sys
 import unittest
+import tempfile
 from unittest.mock import Mock, patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'python'))
 from automation_config import normalize_automation_config
 from ems_policy import build_payload, apply_policy
+import ems_policy
 
 
 class AdapterTests(unittest.TestCase):
@@ -43,7 +45,7 @@ class AdapterTests(unittest.TestCase):
 
     def test_simulation_ev_and_register_gate(self):
         transport = Mock()
-        with patch('ems_policy.ev_reading', return_value=self.ev), patch('ems_policy.load_tou_schedule', return_value={}), patch('builtins.print'), patch.dict(sys.modules, {'requests': Mock(get=Mock(side_effect=AssertionError('Live EV call'))) }):
+        with patch('ems_policy.publish_output'), patch('ems_policy.ev_reading', return_value=self.ev), patch('ems_policy.load_tou_schedule', return_value={}), patch('builtins.print'), patch.dict(sys.modules, {'requests': Mock(get=Mock(side_effect=AssertionError('Live EV call'))) }):
             result = apply_policy(self.data, self.config, transport, {}, datetime(2026,11,3,12))
         self.assertEqual(result['cmd_ev_action'], 'limit')
         self.assertTrue(result['dry_run'])
@@ -63,6 +65,25 @@ class AdapterTests(unittest.TestCase):
         with patch('builtins.print'):
             self.assertTrue(ns['write_limit']('BAT', (1, {'multiply': 1}), 100, 10, force=True))
         device.main_m1_ini.tcpconfig.assert_not_called()
+
+    def test_live_output_contains_only_successful_m1_commands(self):
+        output = {'trace': '[FINAL] source=TOU', 'result': {
+            'target_pt_bess': 40, 'target_qt_bess': 0, 'target_pt_max': 100,
+            'target_ev_limit': None, 'cmd_pt_bess': 40, 'cmd_qt_bess': None,
+            'cmd_pt_max': None, 'cmd_ev_action': None, 'cmd_ev_limit': None,
+            'cmd_inv_list': {}, 'control_source': 'TOU', 'bess_allow_control': True,
+            'recovery_phase': 'NONE', 'solar_data_ok': True, 'dry_run': False,
+        }}
+        payload = {'input': {'TS': 1, 'inv': {'p_out': {}, 'p_max': {}}}}
+        proposed = [{'source':'m1_automation','device':'BAT','role':'battery','parameter':'p_max','value':40}]
+        actual = [dict(proposed[0], status='success')]
+        with tempfile.TemporaryDirectory() as tmp, patch.object(ems_policy, 'STATUS_FILE', Path(tmp) / 'live.json'):
+            ems_policy.publish_output(payload, output, False, True, proposed, actual, [])
+            saved = json.loads(ems_policy.STATUS_FILE.read_text(encoding='utf-8'))
+        self.assertEqual(saved['source'], 'm1_automation')
+        self.assertEqual(saved['actual_commands'], actual)
+        self.assertEqual(saved['result']['cmd_pt_bess'], 40)
+        self.assertNotIn('mqtt', json.dumps(saved['actual_commands']).lower())
 
 
 if __name__ == '__main__':

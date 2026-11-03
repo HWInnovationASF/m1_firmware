@@ -29,6 +29,11 @@ including source quirks such as two-stage solar release allocation.
 one result. `[EMS BLOCKED]` identifies proposals blocked at the execution boundary.
 Simulation logs and Automation-vs-MQTT history retain their existing format.
 
+`?page=ems-live-output` is an Automation-only execution view. Its `cmd_*` fields
+and `M1 Actual Commands` contain only writes successfully issued by M1 in live
+mode. Incoming MQTT commands never enter this stream. In simulation, calculated
+proposals remain in the decision trace while actual commands are always empty.
+
 Offline verification (extract python.7z into this repository first):
 
 ```
