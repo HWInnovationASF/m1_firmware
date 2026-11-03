@@ -132,6 +132,7 @@ required_packages=()
 command -v 7z >/dev/null 2>&1 || required_packages+=(p7zip-full)
 command -v rsync >/dev/null 2>&1 || required_packages+=(rsync)
 command -v python3 >/dev/null 2>&1 || required_packages+=(python3 python3-venv)
+command -v php >/dev/null 2>&1 || required_packages+=(php-cli)
 if command -v python3 >/dev/null 2>&1 && ! python3 -m venv --help >/dev/null 2>&1; then required_packages+=(python3-venv); fi
 
 if ((${#required_packages[@]})); then
