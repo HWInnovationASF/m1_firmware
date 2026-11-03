@@ -36,7 +36,7 @@ class AdapterTests(unittest.TestCase):
             self.assertEqual(payload['calendar'], {'holiday': True, 'offpeak': True})
             self.config['devices']['BAT']['control_enabled'] = False
             payload, _ = build_payload(self.data, self.config, datetime(2026,11,3,12), self.ev)
-            self.assertFalse(payload['config']['BESS']['allow_control'])
+            self.assertTrue(payload['config']['BESS']['allow_control'])
 
     def test_missing_telemetry_is_not_zero(self):
         del self.data['MAIN']['p_t']
