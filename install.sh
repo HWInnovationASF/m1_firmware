@@ -185,6 +185,9 @@ rsync -rlt --no-owner --no-group --no-perms --exclude='/VPN/' --exclude='/__pyca
 mkdir -p "$WEB_DEST/meow"/{config,data,log_device,log_err,dlog,textfile} "$PYTHON_DEST"/{VPN,log_action,log_err,dlog,battery_control_logs}
 chown -R "$RUN_USER:$WEB_GROUP" "$WEB_DEST/meow" "$PYTHON_DEST"
 find "$WEB_DEST/meow" "$PYTHON_DEST" -type d -exec chmod 0755 {} +
+for action_log in "$WEB_DEST/meow/config/system_action.jsonl" "$PYTHON_DEST/mqtt_ftp_action.jsonl"; do
+  [[ ! -f "$action_log" ]] || chmod 0664 "$action_log"
+done
 
 install_python_deps=0
 case "$INSTALL_PYTHON_DEPS" in yes) install_python_deps=1;; no) ;; ask) ask_yes_no "Create a Python virtual environment and install dependencies?" yes && install_python_deps=1;; esac
