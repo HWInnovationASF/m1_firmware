@@ -24,6 +24,18 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 WORK="$(mktemp -d /tmp/mdbiot-install.XXXXXX)"
 trap 'rm -rf -- "$WORK"' EXIT
 
+progress() {
+  local percent="$1" label="$2" width=30 filled empty bar padding
+  if ((percent < 0)); then percent=0; fi
+  if ((percent > 100)); then percent=100; fi
+  filled=$((percent * width / 100))
+  empty=$((width - filled))
+  printf -v bar '%*s' "$filled" ''
+  bar=${bar// /#}
+  printf -v padding '%*s' "$empty" ''
+  printf '\n[%s%s] %3d%%  %s\n' "$bar" "$padding" "$percent" "$label"
+}
+
 usage() {
   cat <<'EOF'
 Usage: sudo ./install.sh [options]
@@ -127,6 +139,8 @@ echo "  Web server : $WEB_SERVER (existing services are not modified)"
 echo "  Database   : $DATABASE (existing services are not modified)"
 if [[ "$YES" != 1 ]]; then ask_yes_no "Continue with this deployment?" no || exit 0; fi
 
+progress 5 "Checking installation requirements"
+
 command -v apt-get >/dev/null 2>&1 || { echo "This installer currently requires an apt-based Debian/Ubuntu system." >&2; exit 1; }
 required_packages=()
 command -v 7z >/dev/null 2>&1 || required_packages+=(p7zip-full)
@@ -146,6 +160,7 @@ if ((${#required_packages[@]})); then
 fi
 
 if [[ "$INSTALL_MODE" == full ]]; then
+  progress 15 "Installing server packages"
   optional_packages=(php-cli php-mbstring php-curl php-zip php-mysql)
   [[ "$WEB_SERVER" == apache ]] && optional_packages+=(apache2)
   [[ "$WEB_SERVER" == nginx ]] && optional_packages+=(nginx php-fpm)
@@ -161,6 +176,8 @@ if ! id "$RUN_USER" >/dev/null 2>&1; then
 fi
 getent group "$WEB_GROUP" >/dev/null 2>&1 || WEB_GROUP="$(id -gn "$RUN_USER")"
 
+progress 25 "Preparing firmware source"
+
 if [[ -n "$SOURCE_DIR" ]]; then SOURCE="$SOURCE_DIR"
 elif [[ -f "$SCRIPT_DIR/html.7z" && -f "$SCRIPT_DIR/python.7z" ]]; then SOURCE="$SCRIPT_DIR"
 else
@@ -174,12 +191,15 @@ for file in html.7z python.7z; do
   7z t "$SOURCE/$file" >/dev/null
 done
 [[ ! -f "$SOURCE/SHA256SUMS" ]] || (cd "$SOURCE" && sha256sum -c SHA256SUMS)
+progress 40 "Extracting web application"
 7z x -y "$SOURCE/html.7z" -o"$WORK/html" >/dev/null
+progress 50 "Extracting Python application"
 7z x -y "$SOURCE/python.7z" -o"$WORK/python" >/dev/null
 WEB_SOURCE="$WORK/html/html"; PY_SOURCE="$WORK/python/python"
 [[ -d "$WEB_SOURCE/meow" && -f "$PY_SOURCE/py_multi.py" ]] || { echo "Invalid package structure" >&2; exit 1; }
 
 mkdir -p "$WEB_DEST" "$PYTHON_DEST"
+progress 60 "Deploying application files"
 rsync -rlt --no-owner --no-group --no-perms --exclude='/meow/config/' --exclude='/meow/data/' --exclude='/meow/userauth.json' --exclude='/meow/log_device/' --exclude='/meow/log_err/' --exclude='/meow/dlog/' --exclude='/meow/textfile/' "$WEB_SOURCE/" "$WEB_DEST/"
 rsync -rlt --no-owner --no-group --no-perms --exclude='/VPN/' --exclude='/__pycache__/' --exclude='/log_action/' --exclude='/log_err/' --exclude='/dlog/' --exclude='/battery_control_logs/' --exclude='/*.json.lock' "$PY_SOURCE/" "$PYTHON_DEST/"
 mkdir -p "$WEB_DEST/meow"/{config,data,log_device,log_err,dlog,textfile} "$PYTHON_DEST"/{VPN,log_action,log_err,dlog,battery_control_logs,log_event,log_event_audit}
@@ -197,14 +217,19 @@ for action_log in "$WEB_DEST/meow/config/system_action.jsonl" "$PYTHON_DEST/mqtt
   [[ ! -f "$action_log" ]] || chmod 0664 "$action_log"
 done
 
+progress 72 "Application files and permissions ready"
+
 install_python_deps=0
 case "$INSTALL_PYTHON_DEPS" in yes) install_python_deps=1;; no) ;; ask) ask_yes_no "Create a Python virtual environment and install dependencies?" yes && install_python_deps=1;; esac
 if ((install_python_deps)); then
+  progress 78 "Installing Python dependencies"
   python3 -m venv --system-site-packages "$PYTHON_DEST/.venv"
   "$PYTHON_DEST/.venv/bin/python" -m pip install --upgrade pip
   [[ ! -f "$PYTHON_DEST/requirements.txt" ]] || "$PYTHON_DEST/.venv/bin/python" -m pip install -r "$PYTHON_DEST/requirements.txt"
   chown -R "$RUN_USER:$WEB_GROUP" "$PYTHON_DEST/.venv"
 fi
+
+progress 84 "Applying runtime configuration"
 
 if [[ "$POST_INSTALL_LOG_MAINTENANCE" == 1 && -f "$PYTHON_DEST/post_firmware_maintenance.py" ]]; then
   echo "==> Maintaining runtime logs"
@@ -228,6 +253,7 @@ create_service=0
 case "$CREATE_SERVICE" in yes) create_service=1;; no) ;; ask) ask_yes_no "Create/update py_multi.service?" yes && create_service=1;; esac
 if ((create_service)) && ! command -v systemctl >/dev/null 2>&1; then echo "systemd unavailable; service was not created" >&2; create_service=0; fi
 if ((create_service)); then
+  progress 90 "Configuring py_multi service"
   python_exec=/usr/bin/python3; [[ -x "$PYTHON_DEST/.venv/bin/python" ]] && python_exec="$PYTHON_DEST/.venv/bin/python"
   cat > /etc/systemd/system/py_multi.service <<UNIT
 [Unit]
@@ -293,6 +319,7 @@ UNIT
   systemctl enable --now m1-firmware-check.timer
 fi
 chmod 0755 /opt/mdbiot-installer/install.sh 2>/dev/null || true
+progress 100 "Installation completed"
 echo "Deployment complete"
 echo "  Web    : $WEB_DEST/meow"
 echo "  Python : $PYTHON_DEST"
