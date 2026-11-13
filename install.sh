@@ -182,9 +182,17 @@ WEB_SOURCE="$WORK/html/html"; PY_SOURCE="$WORK/python/python"
 mkdir -p "$WEB_DEST" "$PYTHON_DEST"
 rsync -rlt --no-owner --no-group --no-perms --exclude='/meow/config/' --exclude='/meow/data/' --exclude='/meow/userauth.json' --exclude='/meow/log_device/' --exclude='/meow/log_err/' --exclude='/meow/dlog/' --exclude='/meow/textfile/' "$WEB_SOURCE/" "$WEB_DEST/"
 rsync -rlt --no-owner --no-group --no-perms --exclude='/VPN/' --exclude='/__pycache__/' --exclude='/log_action/' --exclude='/log_err/' --exclude='/dlog/' --exclude='/battery_control_logs/' --exclude='/*.json.lock' "$PY_SOURCE/" "$PYTHON_DEST/"
-mkdir -p "$WEB_DEST/meow"/{config,data,log_device,log_err,dlog,textfile} "$PYTHON_DEST"/{VPN,log_action,log_err,dlog,battery_control_logs}
+mkdir -p "$WEB_DEST/meow"/{config,data,log_device,log_err,dlog,textfile} "$PYTHON_DEST"/{VPN,log_action,log_err,dlog,battery_control_logs,log_event,log_event_audit}
 chown -R "$RUN_USER:$WEB_GROUP" "$WEB_DEST/meow" "$PYTHON_DEST"
 find "$WEB_DEST/meow" "$PYTHON_DEST" -type d -exec chmod 0755 {} +
+# Keep event logs private but readable by the web group. Apache must own the
+# acknowledgement directory because system_event_api.php writes its state.
+chown -R "$RUN_USER:$WEB_GROUP" "$PYTHON_DEST/log_event"
+find "$PYTHON_DEST/log_event" -type d -exec chmod 0750 {} +
+find "$PYTHON_DEST/log_event" -type f -exec chmod 0640 {} +
+chown -R "www-data:$WEB_GROUP" "$PYTHON_DEST/log_event_audit"
+find "$PYTHON_DEST/log_event_audit" -type d -exec chmod 0750 {} +
+find "$PYTHON_DEST/log_event_audit" -type f -exec chmod 0640 {} +
 for action_log in "$WEB_DEST/meow/config/system_action.jsonl" "$PYTHON_DEST/mqtt_ftp_action.jsonl"; do
   [[ ! -f "$action_log" ]] || chmod 0664 "$action_log"
 done
